@@ -6,3 +6,10 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# IDE files
+.idea/
+.gradle/
+*.iml
+local.properties
+.artifacts/
