@@ -1,19 +1,8 @@
-- [x] **Phase 1: Personalization & Atmosphere**
-    - [x] Implement Gift Wrapping Themes (Midnight Sky, Rose Quartz, Vintage Letter)
-    - [x] Implement Background Moods (Soft Piano, Gentle Rain, Lo-Fi)
-    - [x] Update `create` flow to allow theme and mood selection
-- [x] **Phase 2: Security Upgrade**
-    - [x] Implement Secret Word setup on the `sealed` screen
-    - [x] Implement Secret Word verification for recipients
-- [x] **Phase 3: Magical Visualizations**
-    - [x] Implement 3D Constellation View (Night sky with zoom-able stars)
-    - [x] Update `view` screen to support "Constellation Mode"
-- [x] **Phase 4: Feedback Loop**
-    - [x] Implement Recipient Reactions (Send Heart/Note)
-    - [x] Add backend endpoint/logic for reaction updates
-- [x] **Phase 5: Voice Notes**
-    - [x] Implement microphone access and MediaRecorder API
-    - [x] Add recording UI to Voice modal
-    - [x] Update storage and playback for VNs
-- [x] **Verification**
-    - [x] Test end-to-end "Premium" flow
+- [ ] **"Topic of Love" Expansion**
+    - [ ] Add "Share the Love" ❤️ button to Home and View screens
+    - [ ] Create "Love Hub" landing section in `App.tsx`
+    - [ ] Implement "Inspire Me" quote generator in Note modal
+    - [ ] Update `index.html` with broader love-themed metadata
+- [ ] **Verification**
+    - [ ] Test share functionality
+    - [ ] Verify homepage content and SEO tags

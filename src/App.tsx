@@ -21,6 +21,7 @@ import {
   Ticket,
   Newspaper,
   Sparkles,
+  Heart,
 } from "lucide-react";
 
 declare const PaystackPop: any;
@@ -93,6 +94,29 @@ const MOODS = {
   rain: { label: "Gentle Rain", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" }, // Placeholder
   lofi: { label: "Lo-Fi Beats", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" } // Placeholder
 };
+
+const LOVE_QUOTES = [
+  "I have found the one whom my soul loves.",
+  "You are my today and all of my tomorrows.",
+  "In all the world, there is no heart for me like yours.",
+  "I love you more than there are stars in the sky.",
+  "My heart is and always will be yours.",
+  "To love and be loved is to feel the sun from both sides.",
+  "You're the closest to heaven that I'll ever be.",
+  "Every love story is beautiful, but ours is my favorite.",
+  "You are my greatest adventure.",
+  "Grow old along with me! The best is yet to be.",
+  "You are the poem I never knew how to write.",
+  "Love isn't something you find. Love is something that finds you.",
+  "You are my heart, my life, my one and only thought.",
+  "Wherever you are is my home — my only home.",
+  "If I know what love is, it is because of you.",
+  "I love you, and I will love you until I die, and if there is life after that, I will love you then.",
+  "My soul and your soul are forever tangled.",
+  "You are the best thing that's ever been mine.",
+  "I'm much more me when I'm with you.",
+  "Your love is all I need to feel complete."
+];
 
 const CONFETTI = [
   { left: -46, dx: -60, dy: -78, rot: "120deg", color: "#a3392f", delay: 0.02 },
@@ -431,6 +455,11 @@ function AddItemModal({ type, onAdd, onClose }: any) {
     reader.readAsDataURL(file);
   }
 
+  function handleInspireMe() {
+    const q = LOVE_QUOTES[Math.floor(Math.random() * LOVE_QUOTES.length)];
+    setNoteText(prev => prev ? prev + "\n\n" + q : q);
+  }
+
   async function handleMagicWrite() {
     if (!noteText.trim() && !cfg.label) return;
     setAiLoading(true);
@@ -559,14 +588,23 @@ function AddItemModal({ type, onAdd, onClose }: any) {
           <div className="stacked-form">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <span className="field-tag" style={{ margin: 0 }}>Write your heart out</span>
-              <button
-                className="btn-link"
-                style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
-                onClick={handleMagicWrite}
-                disabled={aiLoading}
-              >
-                {aiLoading ? "Thinking..." : <><Sparkles size={12} /> Magic Write</>}
-              </button>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button
+                  className="btn-link"
+                  style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
+                  onClick={handleInspireMe}
+                >
+                  <Heart size={12} /> Inspire Me
+                </button>
+                <button
+                  className="btn-link"
+                  style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
+                  onClick={handleMagicWrite}
+                  disabled={aiLoading}
+                >
+                  {aiLoading ? "Thinking..." : <><Sparkles size={12} /> Magic Write</>}
+                </button>
+              </div>
             </div>
             <textarea
               className="note-input"
@@ -880,6 +918,25 @@ export default function App() {
   const [lidUp, setLidUp] = useState(false);
   const [reactionText, setReactionText] = useState("");
   const [sendingReaction, setSendingReaction] = useState(false);
+  const [showShareSuccess, setShowShareLoveSuccess] = useState(false);
+
+  async function handleShareLove() {
+    const url = "https://loveers.vercel.app/";
+    const text = "Found the most heartfelt way to send digital gifts! 🎁✨ Check out EverGift:";
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "EverGift", text, url });
+      } catch (e) {}
+    } else {
+      try {
+        await navigator.clipboard.writeText(`${text} ${url}`);
+        setShowShareLoveSuccess(true);
+        setTimeout(() => setShowShareLoveSuccess(false), 2000);
+      } catch (e) {}
+    }
+  }
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -1479,8 +1536,13 @@ export default function App() {
             <div className="brand-mark">
               <Package size={24} strokeWidth={1.75} />
             </div>
-            <h1 className="wordmark">A Little Box of Goodies</h1>
-            <p className="tagline">est. for sending a little care</p>
+            <h1 className="wordmark">The Most Heartfelt Gift for Her</h1>
+            <p className="tagline">Create a personalized digital care package in minutes.</p>
+
+            <div style={{ maxWidth: 500, margin: '0 auto 40px', color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6 }}>
+              <p>Whether it's for an anniversary, long-distance love, or "just because"—tuck in photos, videos, and voice notes into a magical vault she'll never forget.</p>
+            </div>
+
             <div className="home-choices">
               <button className="choice-card paper-card" onClick={() => setScreen("create")}>
                 <span className="choice-icon">
@@ -1497,6 +1559,57 @@ export default function App() {
                 <p>Got a code from someone? Enter it here to unwrap what they sent.</p>
               </button>
             </div>
+
+            <button
+              className="btn-stamp animate-gentle-bob"
+              style={{ marginTop: 40, gap: 10, background: 'rgba(163,57,47,0.05)' }}
+              onClick={handleShareLove}
+            >
+              <Heart size={18} fill={showShareSuccess ? "var(--stamp-red)" : "none"} />
+              {showShareSuccess ? "Link Copied!" : "Share the Love with Friends"}
+            </button>
+
+            <div className="thin-rule" style={{ width: '100%', maxWidth: 600, margin: '60px auto 40px' }} />
+
+            <section className="love-hub" style={{ width: '100%', maxWidth: 700, margin: '0 auto', textAlign: 'left' }}>
+              <div style={{ textAlign: 'center', marginBottom: 40 }}>
+                <h2 className="wordmark" style={{ fontSize: 24 }}>The Hub of Modern Romance</h2>
+                <p className="mini-caption">Tips & Inspiration for Digital Connection</p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30 }}>
+                <div className="paper-card" style={{ padding: 20, background: 'rgba(255,255,255,0.4)' }}>
+                  <h3 className="eyebrow" style={{ color: 'var(--ink)' }}>Long Distance Connection</h3>
+                  <p style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+                    Miles apart but heart to heart. Use EverGift to bridge the distance with surprise voice notes and "open when" time capsules that make every second count.
+                  </p>
+                </div>
+                <div className="paper-card" style={{ padding: 20, background: 'rgba(255,255,255,0.4)' }}>
+                  <h3 className="eyebrow" style={{ color: 'var(--ink)' }}>The 5 Love Languages</h3>
+                  <p style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+                    Whether it's Words of Affirmation or Gifts, EverGift helps you express all five. Tuck in a heartfelt poem or a digital voucher for your next date night.
+                  </p>
+                </div>
+                <div className="paper-card" style={{ padding: 20, background: 'rgba(255,255,255,0.4)' }}>
+                  <h3 className="eyebrow" style={{ color: 'var(--ink)' }}>Meaningful Anniversary Gifts</h3>
+                  <p style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+                    Forget generic cards. Create a timeline of your favorite moments in a constellation of glowing memories that stays private and personal forever.
+                  </p>
+                </div>
+                <div className="paper-card" style={{ padding: 20, background: 'rgba(255,255,255,0.4)' }}>
+                  <h3 className="eyebrow" style={{ color: 'var(--ink)' }}>Ethereal Love Vault</h3>
+                  <p style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
+                    Your love story deserves a home. Store your most cherished digital keepsakes in our secure vault, designed for intimacy and beauty.
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 50, textAlign: 'center' }}>
+                <p className="handwritten-note" style={{ fontSize: 18, color: 'var(--stamp-red)' }}>
+                  "Love is not about how many days, months, or years you've been together. It's all about how much you love each other every day."
+                </p>
+              </div>
+            </section>
           </div>
         )}
 
@@ -2057,6 +2170,15 @@ export default function App() {
               </p>
               <button className="btn-ghost-card" style={{ marginTop: 12 }} onClick={resetAll}>
                 Pack your own <ArrowRight size={14} />
+              </button>
+
+              <button
+                className="btn-link"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, margin: '20px auto 0', color: 'var(--stamp-red)' }}
+                onClick={handleShareLove}
+              >
+                <Heart size={14} fill={showShareSuccess ? "var(--stamp-red)" : "none"} />
+                {showShareSuccess ? "Link Copied!" : "Share the Love"}
               </button>
             </div>
           </div>
