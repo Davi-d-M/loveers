@@ -124,6 +124,12 @@ function hashStr(s: string) {
   return Math.abs(h);
 }
 
+function isRestrictedBrowser() {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || "";
+  return (ua.indexOf("Instagram") > -1) || (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1);
+}
+
 function trunc(s: string, n: number) {
   if (!s) return s;
   return s.length > n ? s.slice(0, n) + "…" : s;
@@ -824,6 +830,19 @@ export default function App() {
   const [reactionText, setReactionText] = useState("");
   const [sendingReaction, setSendingReaction] = useState(false);
   const [showShareSuccess, setShowShareLoveSuccess] = useState(false);
+  const [inRestrictedBrowser, setInRestrictedBrowser] = useState(false);
+
+  useEffect(() => {
+    if (isRestrictedBrowser()) {
+      setInRestrictedBrowser(true);
+      // Attempt auto-breakout for Android
+      if (/Android/i.test(navigator.userAgent)) {
+        const currentUrl = window.location.href.replace(/^https?:\/\//, "");
+        window.location.href = `intent://${currentUrl}#Intent;scheme=https;package=com.android.chrome;end`;
+      }
+    }
+  }, []);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -930,6 +949,12 @@ export default function App() {
           const verifyPayment = async () => {
             try {
               const verifyResp = await fetch(`/api/paystack/verify/${response.reference}`);
+
+              if (!verifyResp.ok) {
+                const errorText = await verifyResp.text();
+                throw new Error(`Server error (${verifyResp.status}): ${errorText.slice(0, 50)}`);
+              }
+
               const verifyData = await verifyResp.json();
               if (verifyData.status !== true || verifyData.data.status !== "success") {
                 setSealError("Payment verification failed. Please contact support.");
@@ -1320,6 +1345,33 @@ export default function App() {
       `}</style>
 
       <div className="shell">
+        {inRestrictedBrowser && (
+          <div className="modal-backdrop" style={{ zIndex: 100, backdropFilter: 'blur(10px)' }}>
+            <div className="kiosk-card paper-card ethereal-glow animate-gentle-bob" style={{ maxWidth: 360, padding: 40 }}>
+              <div className="brand-mark" style={{ margin: '0 auto 20px' }}>
+                <Package size={24} strokeWidth={1.75} />
+              </div>
+              <h2 className="wordmark" style={{ fontSize: 20 }}>Security Shield</h2>
+              <p className="hint" style={{ margin: '15px 0', lineHeight: 1.6 }}>
+                Instagram's browser is restricted. To ensure your <strong>Payments</strong> and <strong>Voice Notes</strong> work perfectly, please open this in your real browser.
+              </p>
+              <div className="dashed-rule" />
+              <p className="mini-caption" style={{ marginBottom: 20 }}>Tap the three dots (⋮) and select "Open in Browser"</p>
+              <button
+                className="btn-primary"
+                style={{ width: '100%' }}
+                onClick={() => {
+                  const url = window.location.href;
+                  navigator.clipboard.writeText(url);
+                  alert("Link copied! Paste it into Chrome or Brave.");
+                }}
+              >
+                Copy Link to Browser
+              </button>
+            </div>
+          </div>
+        )}
+
         {screen !== "home" && (
           <div className="top-nav">
             <button onClick={resetAll}><ArrowLeft size={14} /> Home</button>

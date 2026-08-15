@@ -1,9 +1,7 @@
-- [x] **Vercel Build Fix & Performance Optimization**
-    - [x] Fix production import crash
-    - [x] Purge AI/Mock content
-    - [x] Fix JSX syntax errors
-    - [x] Explicitly set output directory
-- [ ] **Debug System Error**
-    - [ ] Add descriptive error reporting to `App.tsx`
-    - [ ] Add backend logging to `server.ts`
-    - [ ] Push to GitHub and test
+- [ ] **Final Reliability Fixes**
+    - [ ] Implement Instagram/Facebook detection in `App.tsx`
+    - [ ] Add `BrowserShield` UI component
+    - [ ] Improve payment verification error handling and logging
+    - [ ] Refine Secret Word "Vault Locked" screen UI
+- [ ] **Verification**
+    - [ ] Push to GitHub and test on Vercel
