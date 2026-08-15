@@ -46,7 +46,7 @@ app.get("/api/paystack/verify/:reference", async (req, res) => {
 });
 
 // Development vs Production setup
-if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+if (process.env.NODE_ENV !== "production" && !process.env.VERCEL && !process.env.RENDER) {
   const setupDev = async () => {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
@@ -69,7 +69,6 @@ if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
   app.use(express.static(distPath));
 
   app.get("*", (req, res, next) => {
-    // If it's an API call that wasn't caught, let it 404
     if (req.url.startsWith('/api/')) return next();
     res.sendFile(path.join(distPath, "index.html"));
   });
