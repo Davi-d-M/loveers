@@ -1,30 +1,29 @@
-# Walkthrough - Clean Memory Vault & Vercel Verification
+# Walkthrough - Dynamic Origins & Platform Stability
 
-I have completed the final cleanup to ensure EverGift is 100% focused on your real memories and is fully optimized for a smooth, error-free deployment on Vercel.
+I have fixed the issue where the app was hardcoded to redirect to Vercel and ensured the server is perfectly configured for Render and Custom Domains.
 
-## 🧹 Complete Purge of "Non-Memories"
-- **Original Branding Reinstated**: Reverted the homepage title back to "A Little Box of Goodies" and the neutral tagline.
-- **Zero AI Content**: Removed the "Magic Write" AI assistant and all Gemini-related logic.
-- **Zero Mock Content**: Removed the "Love Hub," mock stories, and "Inspire Me" quotes.
-- **Strictly Yours**: The app now only displays the photos, videos, voice notes, and messages that you actually put into the box.
+## 🛠️ Key Fixes
 
-## 🛠️ Vercel & Build Optimization
-- **Lean Build Script**: Simplified the `npm run build` command to focus strictly on Vite. This avoids heavy bundling steps that were causing timeouts and warnings on Vercel.
-- **API-Only Backend**: Refactored `server.ts` to handle only the critical `/api` endpoints (like Paystack verification). Vercel now handles the static frontend serving automatically, making the site much faster and more reliable.
-- **Verified Health**: Run a final scan—zero errors, zero warnings, and the local build passes perfectly.
+### 🔗 Dynamic Platform Support
+- **Automatic Detection**: Removed the hardcoded `loveers.vercel.app` link. The app now automatically detects whether it's running on **Render**, **Vercel**, or your **Custom Domain** (`.bio`).
+- **Sticky Domain**: This means if you share a link from Render, it stays on Render. If you share from your custom domain, it stays there. No more unwanted jumping between sites!
 
-## ❤️ Premium Features Retained
-Despite the cleanup, the "premium" feeling remains:
-- **3D Constellation View**: Your memories still float as glowing stars.
-- **Custom Music Upload**: You can still set the mood with your own MP3 files.
-- **Voice Notes**: Recording and sending real audio messages works perfectly.
-- **Share the Love**: The heart button ❤️ is still there to help you share the app with friends.
+### 🛡️ Smart Browser Shield
+- **Dynamic Redirection**: Updated the Instagram/Facebook "Security Shield" to use the current domain.
+- **Improved UI**: The "Copy Link" instructions now explicitly mention **Safari** for iPhone users, ensuring everyone has the best experience.
+
+### ⚙️ Server Reliability (Render Fix)
+- **Port Type Fix**: Resolved a TypeScript error in `server.ts` where the system port was being treated as a text string instead of a number. This ensures Render can successfully bind the app to its network.
+
+## Technical Summary
+- **App.tsx**: Replaced hardcoded URL strings with `window.location.origin`.
+- **server.ts**: Wrapped `process.env.PORT` in `Number()` for strict type safety.
+- **Git Sync**: All changes have been pushed to your main branch.
 
 ## How to Verify
-1. **Push & Deploy**: I have pushed the clean version to GitHub.
-2. **Check Vercel**: Your Vercel dashboard should now show a **Green "Ready" Status** with a very fast build time.
-3. **Open the App**: Visit your URL and verify that the homepage is clean, professional, and free of any "non-memory" bloat.
+1. **Redeploy**: Render/Vercel will detect the new commit (`0c73501`) and redeploy.
+2. **Share Test**: Click "Share the Love" on any platform and verify the link matches the domain you are currently on.
+3. **Instagram Check**: Open the link in Instagram and verify the Shield screen correctly points to your current site.
 
 render_diffs(file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
 render_diffs(file:///C:/Users/hp/AndroidStudioProjects/love/server.ts)
-render_diffs(file:///C:/Users/hp/AndroidStudioProjects/love/package.json)
