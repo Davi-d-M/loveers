@@ -1,37 +1,31 @@
-# Implementation Plan - Definitive Render Fix & Secret Vault Polish
+# Implementation Plan - Final "Bulletproof" Render Fix
 
-This plan resolves the "Frontend build not found" error on Render and ensures the Secret Vault (Password Protection) is robust and easy to use.
+This plan resolves the persistent "Frontend build not found" error on Render by implementing recursive path searching and comprehensive environment logging.
 
 ## Proposed Changes
 
-### [Server] Definitive Path Resolution
-Ensure the server serves the frontend files correctly on Render by simplifying the static serving logic.
+### [Server] "Smart" Path Discovery
+Update the server to actively look for the `dist` folder instead of relying on a single hardcoded path.
 
 #### [MODIFY] [server.ts](file:///C:/Users/hp/AndroidStudioProjects/love/server.ts)
-- Simplify path resolution to use `path.join(process.cwd(), 'dist')`.
-- Remove the conditional `fs.existsSync` check for `express.static` to let Express handle the mapping.
-- Add more detailed logging for Paystack verification to catch "System Errors" early.
+- Implement a `findDistPath()` helper that checks:
+    - `./dist`
+    - `../dist`
+    - `./src/dist`
+    - `process.cwd()/dist`
+- Log the entire directory structure (one level deep) to the console if the build is still missing. This will give us the exact roadmap of the Render server.
+- Add an automatic redirect from `/` to the first available `index.html`.
 
-### [UX] Secret Vault Polish
-Make the password protection feature more obvious and robust.
-
-#### [MODIFY] [App.tsx](file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
-- **Sender UI**: Update the "Secret Word" section to have a clearer "Save" feedback.
-- **Recipient UI**: Fix a potential loop where a wrong password might not show a clear error message.
-- **Cleanup**: Double-check for any remaining "non-memory" content (AI content).
-
-### [Build] Clean Dependencies
-Ensure Render has everything it needs to build successfully.
+### [Build] Build Step Verification
+Ensure the build process is producing files where the server expects them.
 
 #### [MODIFY] [package.json](file:///C:/Users/hp/AndroidStudioProjects/love/package.json)
-- Ensure all build-time tools like `tsx` are in `dependencies` (not `devDependencies`) because Render needs them at runtime.
+- Update build command: `vite build && echo "Build complete" && ls -R dist || dir /s dist` (standardizing output check).
+- Ensure `typescript` and `tsx` are firmly in `dependencies`.
 
 ## Verification Plan
 
-### Automated Tests
-- Run `npm run build` locally.
-- Start the server and verify it serves `index.html` correctly.
-
 ### Manual Verification
-1. **Unbox Test**: Set a secret word, open the link, and verify the password prompt works.
-2. **Payment Test**: Monitor the logs for a successful Paystack handshake.
+1. **Local Test**: Verify the server finds `dist` even if started from different subfolders.
+2. **Render Logs**: Check the new logs on Render to see the "Smart Discovery" in action.
+3. **Emergency Fallback**: If it still fails, the logs will show the exact directory tree, allowing for a 1-minute final fix.

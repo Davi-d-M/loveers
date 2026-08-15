@@ -1,6 +1,10 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
@@ -46,48 +50,70 @@ app.get("/api/paystack/verify/:reference", async (req, res) => {
   }
 });
 
-// --- Production Mode (Render, Vercel, etc.) ---
+// --- Smart Path Discovery for Production ---
 const PORT = Number(process.env.PORT) || 3000;
 const isVercel = !!process.env.VERCEL;
 
-// Explicitly resolve the dist folder path
-const distPath = path.resolve(process.cwd(), "dist");
-const indexPath = path.join(distPath, "index.html");
+const getProductionPaths = () => {
+  const possiblePaths = [
+    path.join(process.cwd(), "dist"),
+    path.join(__dirname, "dist"),
+    path.join(process.cwd(), "src", "dist"),
+    path.join(__dirname, "..", "dist")
+  ];
 
-console.log(`[Server] Runtime Directory: ${process.cwd()}`);
-console.log(`[Server] Serving static files from: ${distPath}`);
-
-// Static files (CSS, JS, Images)
-app.use(express.static(distPath));
-
-// API fallback (if no endpoint matched above)
-app.use('/api/*', (req, res) => {
-  res.status(404).json({ error: 'API endpoint not found' });
-});
-
-// Catch-all route to serve the frontend index.html
-app.get("*", (req, res) => {
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    console.error(`[Server] ERROR: index.html not found at: ${indexPath}`);
-    res.status(404).send(`
-      <html>
-        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-          <h1>Frontend build not found</h1>
-          <p>Please ensure 'npm run build' completed successfully on Render.</p>
-          <hr/>
-          <p style="color: gray;">Looking in: ${indexPath}</p>
-        </body>
-      </html>
-    `);
+  for (const p of possiblePaths) {
+    const indexPath = path.join(p, "index.html");
+    if (fs.existsSync(indexPath)) {
+      return { distPath: p, indexPath };
+    }
   }
+  return null;
+};
+
+const paths = getProductionPaths();
+
+if (paths) {
+  console.log(`[Server] Success! Found dist at: ${paths.distPath}`);
+  app.use(express.static(paths.distPath));
+} else {
+  console.warn(`[Server] Initial path discovery failed. Current CWD: ${process.cwd()}`);
+}
+
+// Catch-all route
+app.get("*", (req, res, next) => {
+  if (req.url.startsWith('/api/')) return next();
+
+  if (paths && fs.existsSync(paths.indexPath)) {
+    return res.sendFile(paths.indexPath);
+  }
+
+  // Final Emergency Search
+  const emergencyPaths = getProductionPaths();
+  if (emergencyPaths) {
+    return res.sendFile(emergencyPaths.indexPath);
+  }
+
+  // If still not found, log directory structure to help debug
+  console.error(`[Server] CRITICAL: index.html not found.`);
+  console.log(`[Server] Directory Scan (CWD):`, fs.readdirSync(process.cwd()));
+  try { console.log(`[Server] Directory Scan (DIR):`, fs.readdirSync(__dirname)); } catch(e) {}
+
+  res.status(404).send(`
+    <html>
+      <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+        <h1>Memory Vault: Under Construction</h1>
+        <p>The frontend is still being tucked into the box. Please refresh in a moment.</p>
+        <hr/>
+        <p style="color: gray; font-size: 10px;">Search Path: ${process.cwd()}</p>
+      </body>
+    </html>
+  `);
 });
 
-// Only listen on a port if not on Vercel
 if (!isVercel) {
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`EverGift production server listening on port ${PORT}`);
+    console.log(`EverGift server listening on port ${PORT}`);
   });
 }
 

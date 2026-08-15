@@ -1,9 +1,7 @@
-- [ ] **Definitive Render Fix**
-    - [ ] Simplify `server.ts` path resolution
-    - [ ] Add better logging for Paystack verification
-- [ ] **Secret Vault Polish**
-    - [ ] Improve Secret Word UI in `App.tsx`
-    - [ ] Remove any remaining Sparkles/AI remnants
-- [ ] **Verification**
-    - [ ] Local build & run check
+- [ ] **Bulletproof Render Fix**
+    - [ ] Implement `findDistPath()` helper in `server.ts`
+    - [ ] Add directory tree logging in `server.ts`
+    - [ ] Update `package.json` build command for clarity
+- [ ] **Verification & Deployment**
+    - [ ] Run local build test
     - [ ] Push to GitHub
