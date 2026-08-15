@@ -1378,6 +1378,13 @@ export default function App() {
               >
                 Copy Link to Browser
               </button>
+              <button
+                className="btn-link"
+                style={{ width: '100%', marginTop: 15, fontSize: 12 }}
+                onClick={() => setInRestrictedBrowser(false)}
+              >
+                I'll take my chances (Continue anyway)
+              </button>
             </div>
           </div>
         )}
