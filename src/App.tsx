@@ -1534,8 +1534,8 @@ export default function App() {
             <div className="brand-mark">
               <Package size={24} strokeWidth={1.75} />
             </div>
-            <h1 className="wordmark">The Most Heartfelt Gift for Her</h1>
-            <p className="tagline">Create a personalized digital care package in minutes.</p>
+            <h1 className="wordmark">A Little Box of Goodies</h1>
+            <p className="tagline">est. for sending a little care</p>
 
             <div className="home-choices">
               <button className="choice-card paper-card" onClick={() => setScreen("create")}>

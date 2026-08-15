@@ -1,5 +1,4 @@
 import express from "express";
-import path from "path";
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
@@ -50,17 +49,6 @@ if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     });
   };
   setupDev();
-} else if (!process.env.VERCEL) {
-  const distPath = path.join(process.cwd(), "dist");
-  app.use(express.static(distPath));
-  app.get("*", (_req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
-  });
-
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`EverGift local production server listening on port ${PORT}`);
-  });
 }
 
 export default app;
