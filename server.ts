@@ -63,7 +63,7 @@ if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
   setupDev();
 } else if (!process.env.VERCEL) {
   // Production (Render, etc.)
-  const PORT = process.env.PORT || 3000;
+  const PORT = Number(process.env.PORT) || 3000;
   const distPath = path.join(process.cwd(), "dist");
 
   app.use(express.static(distPath));

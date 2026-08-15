@@ -1,7 +1,7 @@
-- [ ] **Final Reliability Fixes**
-    - [ ] Implement Instagram/Facebook detection in `App.tsx`
-    - [ ] Add `BrowserShield` UI component
-    - [ ] Improve payment verification error handling and logging
-    - [ ] Refine Secret Word "Vault Locked" screen UI
-- [ ] **Verification**
-    - [ ] Push to GitHub and test on Vercel
+- [ ] **Fix Hardcoded Redirection**
+    - [ ] Update `handleShareLove` in `App.tsx` to use `window.location.origin`
+    - [ ] Update Browser Shield "Copy Link" to use dynamic URL
+    - [ ] Add "Bypass Shield" state to prevent detection loops
+- [ ] **Verification & Deployment**
+    - [ ] Run `npm run build` and `npm run lint`
+    - [ ] Push to GitHub

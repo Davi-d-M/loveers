@@ -1151,7 +1151,7 @@ export default function App() {
   }
 
   async function handleShareLove() {
-    const url = "https://loveers.vercel.app/";
+    const url = window.location.origin + "/";
     const text = "Found the most heartfelt way to send digital gifts! 🎁✨ Check out EverGift:";
     if (navigator.share) {
       try {
@@ -1373,7 +1373,7 @@ export default function App() {
                 onClick={() => {
                   const url = window.location.href;
                   navigator.clipboard.writeText(url);
-                  alert("Link copied! Paste it into Chrome or Brave.");
+                  alert("Link copied! Paste it into Chrome, Brave, or Safari.");
                 }}
               >
                 Copy Link to Browser
