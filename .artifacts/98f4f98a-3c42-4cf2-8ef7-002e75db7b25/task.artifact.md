@@ -1,10 +1,12 @@
-- [ ] **Custom Music Upload & Controls**
-    - [ ] Implement local audio file picker and reader (10MB limit)
-    - [ ] Update creation UI to include "Upload Your Own Song"
-    - [ ] Add `isAudioPlaying` state and play/pause controller UI
-    - [ ] Update unboxing logic to prioritize uploaded music
-    - [ ] Sync audio controls with recipient's view
-- [ ] **Verification**
-    - [ ] Test custom MP3 upload flow
-    - [ ] Verify play/pause toggle functionality
-    - [ ] Check audio persistence across view modes
+- [ ] **Cleanup AI & Mock Content**
+    - [ ] Remove `LOVE_QUOTES` and `handleInspireMe` in `App.tsx`
+    - [ ] Remove `handleMagicWrite` and related UI buttons in `App.tsx`
+    - [ ] Remove "Love Hub" section from Home screen in `App.tsx`
+    - [ ] Remove "Memory Garden" view mode in `App.tsx`
+    - [ ] Remove Gemini AI endpoints and imports in `server.ts`
+- [ ] **Vercel Optimization**
+    - [ ] Clean up top-level imports in `server.ts`
+    - [ ] Ensure static serving logic is robust
+- [ ] **Verification & Deployment**
+    - [ ] Run `npm run build` and `npm run lint`
+    - [ ] Push to GitHub

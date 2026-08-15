@@ -1,33 +1,42 @@
-# Implementation Plan - Custom Music Upload & Audio Controls
+# Implementation Plan - Cleanup & Vercel Optimization
 
-This plan adds the ability for senders to upload their own background music from their device and provides a play/pause controller for recipients.
+This plan cleans the app of all AI-generated content and static "mock" text, leaving only the user's real memories. It also optimizes the build for Vercel.
 
 ## Proposed Changes
 
-### [Upload] Local Music Selection
-Allow users to pick a song from their phone to play during the unboxing.
+### [Cleanup] Remove AI & Mock Content
+Ensure the app is 100% focused on user-uploaded memories.
 
 #### [MODIFY] [App.tsx](file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
-- Add a "Custom Upload" option to the background mood selection.
-- Implement `handleMusicFile` to read the audio file as a base64 string (with a 10MB limit).
-- Store the custom audio in a new `customAudioSrc` field in the package payload.
+- **Remove AI**: Delete the "Magic Write" button and logic.
+- **Remove Quotes**: Delete the "Inspire Me" button and the `LOVE_QUOTES` list.
+- **Remove Love Hub**: Delete the "Hub of Modern Romance" section from the homepage.
+- **Remove Memory Garden**: Remove the "Garden" view toggle (keeping only Classic and Constellation).
 
-### [UX] Play/Pause Controller
-Add a subtle floating music control for the recipient.
+#### [MODIFY] [server.ts](file:///C:/Users/hp/AndroidStudioProjects/love/server.ts)
+- Delete all Gemini/AI endpoints (`/api/gemini/*`).
 
-#### [MODIFY] [App.tsx](file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
-- Add a state `isAudioPlaying` to track playback.
-- Implement a small floating music button (using `Music` / `Pause` / `Play` icons) in the `view` screen.
-- Ensure the controller works with both pre-set "Moods" and "Custom Uploads".
+### [Build] Vercel Optimization
+Fix runtime crashes and build warnings.
 
-### [Atmosphere] Audio Logic
-- Update the unboxing sequence to prioritize `customAudioSrc` if available.
-- Ensure Voice Notes still work independently (the background music should ideally dim or pause when a VN is played, but for simplicity, we will start with a manual toggle).
+#### [MODIFY] [server.ts](file:///C:/Users/hp/AndroidStudioProjects/love/server.ts)
+- Ensure no development-only packages are imported at the top level.
+- Refine the static file serving logic for the `dist` folder.
+
+### [SEO] Optimized Tags
+Keep the search-engine logic so you still rank for "Love" topics, but keep the UI clean.
+
+#### [MODIFY] [index.html](file:///C:/Users/hp/AndroidStudioProjects/love/index.html)
+- Retain the meta tags and Schema.org data for AI recommendations.
 
 ## Verification Plan
 
+### Automated Tests
+- Run `npm run build` locally to ensure zero warnings.
+- Run `npm run lint` to confirm all removed logic is fully purged.
+
 ### Manual Verification
-1. **Upload Test**: In "Pack a package", choose "Custom" mood, select an MP3 from your phone, and verify it can be added.
-2. **Unwrap Test**: Open the box and verify the custom song starts playing.
-3. **Control Test**: Use the new pause/play button to stop and restart the music.
-4. **Volume Check**: Ensure the custom audio isn't too loud or quiet compared to the system sounds.
+1. **Clean UI**: Open the homepage and verify the "Love Hub" is gone.
+2. **Clean Modals**: Verify the "Magic Write" and "Inspire Me" buttons are removed from the Note modal.
+3. **Constellation Check**: Ensure the 3D Constellation view still works perfectly.
+4. **Deploy**: Push to GitHub and verify Vercel shows a green "Ready" status.

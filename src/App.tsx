@@ -96,29 +96,6 @@ const MOODS = {
   lofi: { label: "Lo-Fi Beats", url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3" } // Placeholder
 };
 
-const LOVE_QUOTES = [
-  "I have found the one whom my soul loves.",
-  "You are my today and all of my tomorrows.",
-  "In all the world, there is no heart for me like yours.",
-  "I love you more than there are stars in the sky.",
-  "My heart is and always will be yours.",
-  "To love and be loved is to feel the sun from both sides.",
-  "You're the closest to heaven that I'll ever be.",
-  "Every love story is beautiful, but ours is my favorite.",
-  "You are my greatest adventure.",
-  "Grow old along with me! The best is yet to be.",
-  "You are the poem I never knew how to write.",
-  "Love isn't something you find. Love is something that finds you.",
-  "You are my heart, my life, my one and only thought.",
-  "Wherever you are is my home — my only home.",
-  "If I know what love is, it is because of you.",
-  "I love you, and I will love you until I die, and if there is life after that, I will love you then.",
-  "My soul and your soul are forever tangled.",
-  "You are the best thing that's ever been mine.",
-  "I'm much more me when I'm with you.",
-  "Your love is all I need to feel complete."
-];
-
 const CONFETTI = [
   { left: -46, dx: -60, dy: -78, rot: "120deg", color: "#a3392f", delay: 0.02 },
   { left: -22, dx: -28, dy: -100, rot: "220deg", color: "#33556a", delay: 0.09 },
@@ -405,8 +382,6 @@ function AddItemModal({ type, onAdd, onClose }: any) {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  const [aiLoading, setAiLoading] = useState(false);
-
   const [drawingData, setDrawingData] = useState("");
 
   const [locName, setLocName] = useState("");
@@ -454,35 +429,6 @@ function AddItemModal({ type, onAdd, onClose }: any) {
       setVideoBusy(false);
     };
     reader.readAsDataURL(file);
-  }
-
-  function handleInspireMe() {
-    const q = LOVE_QUOTES[Math.floor(Math.random() * LOVE_QUOTES.length)];
-    setNoteText(prev => prev ? prev + "\n\n" + q : q);
-  }
-
-  async function handleMagicWrite() {
-    if (!noteText.trim() && !cfg.label) return;
-    setAiLoading(true);
-    try {
-      const resp = await fetch("/api/gemini/letter", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          prompt: noteText || "Write a beautiful note to someone I love",
-          tone: "Heartfelt & Poetic",
-          recipientName: "my love",
-          senderName: "someone who cares",
-          occasion: "Just because"
-        })
-      });
-      const data = await resp.json();
-      if (data.text) setNoteText(data.text);
-    } catch (err) {
-      console.error("AI Error:", err);
-    } finally {
-      setAiLoading(false);
-    }
   }
 
   function canAdd() {
@@ -587,26 +533,6 @@ function AddItemModal({ type, onAdd, onClose }: any) {
 
         {type === "note" && (
           <div className="stacked-form">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <span className="field-tag" style={{ margin: 0 }}>Write your heart out</span>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button
-                  className="btn-link"
-                  style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
-                  onClick={handleInspireMe}
-                >
-                  <Heart size={12} /> Inspire Me
-                </button>
-                <button
-                  className="btn-link"
-                  style={{ fontSize: 12, display: 'flex', alignItems: 'center', gap: 4 }}
-                  onClick={handleMagicWrite}
-                  disabled={aiLoading}
-                >
-                  {aiLoading ? "Thinking..." : <><Sparkles size={12} /> Magic Write</>}
-                </button>
-              </div>
-            </div>
             <textarea
               className="note-input"
               rows={5}
@@ -918,7 +844,7 @@ export default function App() {
   const [isLocked, setIsLocked] = useState(false);
   const [needsSecret, setNeedsSecret] = useState(false);
   const [unlockTime, setUnlockTime] = useState<number | null>(null);
-  const [viewMode, setViewMode] = useState("classic"); // classic | garden | constellation
+  const [viewMode, setViewMode] = useState("classic"); // classic | constellation
   const [lidUp, setLidUp] = useState(false);
   const [isUntying, setIsUntying] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -965,6 +891,8 @@ export default function App() {
     setItems([]);
     setTheme("default");
     setMood("none");
+    setCustomMoodSrc(null);
+    setCustomMoodName(null);
     setUnlockDate("");
     setActiveForm(null);
     setPreviewOpen(false);
@@ -981,6 +909,8 @@ export default function App() {
     setIsLocked(false);
     setNeedsSecret(false);
     setLidUp(false);
+    setIsUntying(false);
+    setIsAudioPlaying(false);
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = 0;
@@ -1607,10 +1537,6 @@ export default function App() {
             <h1 className="wordmark">The Most Heartfelt Gift for Her</h1>
             <p className="tagline">Create a personalized digital care package in minutes.</p>
 
-            <div style={{ maxWidth: 500, margin: '0 auto 40px', color: 'var(--ink-soft)', fontSize: 14, lineHeight: 1.6 }}>
-              <p>Whether it's for an anniversary, long-distance love, or "just because"—tuck in photos, videos, and voice notes into a magical vault she'll never forget.</p>
-            </div>
-
             <div className="home-choices">
               <button className="choice-card paper-card" onClick={() => setScreen("create")}>
                 <span className="choice-icon">
@@ -1636,48 +1562,6 @@ export default function App() {
               <Heart size={18} fill={showShareSuccess ? "var(--stamp-red)" : "none"} />
               {showShareSuccess ? "Link Copied!" : "Share the Love with Friends"}
             </button>
-
-            <div className="thin-rule" style={{ width: '100%', maxWidth: 600, margin: '60px auto 40px' }} />
-
-            <section className="love-hub" style={{ width: '100%', maxWidth: 700, margin: '0 auto', textAlign: 'left' }}>
-              <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                <h2 className="wordmark" style={{ fontSize: 24 }}>The Hub of Modern Romance</h2>
-                <p className="mini-caption">Tips & Inspiration for Digital Connection</p>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 30 }}>
-                <div className="paper-card" style={{ padding: 20, background: 'rgba(255,255,255,0.4)' }}>
-                  <h3 className="eyebrow" style={{ color: 'var(--ink)' }}>Long Distance Connection</h3>
-                  <p style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
-                    Miles apart but heart to heart. Use EverGift to bridge the distance with surprise voice notes and "open when" time capsules that make every second count.
-                  </p>
-                </div>
-                <div className="paper-card" style={{ padding: 20, background: 'rgba(255,255,255,0.4)' }}>
-                  <h3 className="eyebrow" style={{ color: 'var(--ink)' }}>The 5 Love Languages</h3>
-                  <p style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
-                    Whether it's Words of Affirmation or Gifts, EverGift helps you express all five. Tuck in a heartfelt poem or a digital voucher for your next date night.
-                  </p>
-                </div>
-                <div className="paper-card" style={{ padding: 20, background: 'rgba(255,255,255,0.4)' }}>
-                  <h3 className="eyebrow" style={{ color: 'var(--ink)' }}>Meaningful Anniversary Gifts</h3>
-                  <p style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
-                    Forget generic cards. Create a timeline of your favorite moments in a constellation of glowing memories that stays private and personal forever.
-                  </p>
-                </div>
-                <div className="paper-card" style={{ padding: 20, background: 'rgba(255,255,255,0.4)' }}>
-                  <h3 className="eyebrow" style={{ color: 'var(--ink)' }}>Ethereal Love Vault</h3>
-                  <p style={{ fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.5 }}>
-                    Your love story deserves a home. Store your most cherished digital keepsakes in our secure vault, designed for intimacy and beauty.
-                  </p>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 50, textAlign: 'center' }}>
-                <p className="handwritten-note" style={{ fontSize: 18, color: 'var(--stamp-red)' }}>
-                  "Love is not about how many days, months, or years you've been together. It's all about how much you love each other every day."
-                </p>
-              </div>
-            </section>
           </div>
         )}
 
@@ -2095,13 +1979,6 @@ export default function App() {
                   Classic Scrapbook
                 </button>
                 <button
-                  className={`btn-secondary ${viewMode === 'garden' ? 'paper-soft' : ''}`}
-                  style={{ padding: '6px 14px', fontSize: 12, opacity: viewMode === 'garden' ? 1 : 0.6 }}
-                  onClick={() => setViewMode('garden')}
-                >
-                  ✨ Memory Garden
-                </button>
-                <button
                   className={`btn-secondary ${viewMode === 'constellation' ? 'paper-soft' : ''}`}
                   style={{ padding: '6px 14px', fontSize: 12, opacity: viewMode === 'constellation' ? 1 : 0.6 }}
                   onClick={() => setViewMode('constellation')}
@@ -2149,7 +2026,7 @@ export default function App() {
                   ))}
                 </div>
               </>
-            ) : viewMode === "constellation" ? (
+            ) : (
               <div className="constellation-view" style={{
                 width: '100%',
                 minHeight: '80vh',
@@ -2198,44 +2075,6 @@ export default function App() {
                       </div>
                     );
                   })}
-                </div>
-              </div>
-            ) : (
-              <div className="garden-view glass-panel ethereal-glow" style={{ width: '100%', minHeight: '70vh', padding: '40px 20px', borderRadius: 20, position: 'relative', overflow: 'hidden' }}>
-                <div style={{ textAlign: 'center', marginBottom: 40, position: 'relative', zIndex: 10 }}>
-                  <h2 className="wordmark" style={{ color: 'var(--ink)' }}>Garden of Memories</h2>
-                  <p className="tagline">for {openedPackage.to} from {openedPackage.from}</p>
-                </div>
-                <div className="tucked-grid" style={{ gap: 40 }}>
-                  {openedPackage.items.map((it: any, idx: number) => (
-                    <div
-                      key={it.id}
-                      className="animate-gentle-bob"
-                      style={{ animationDelay: `${idx * 0.5}s` }}
-                    >
-                      <TuckedItem item={it} index={idx} />
-                    </div>
-                  ))}
-                </div>
-                {/* Floating particles background effect */}
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
-                  {[...Array(12)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="animate-pulse-slow"
-                      style={{
-                        position: 'absolute',
-                        left: `${Math.random() * 100}%`,
-                        top: `${Math.random() * 100}%`,
-                        width: Math.random() * 100 + 50,
-                        height: Math.random() * 100 + 50,
-                        background: 'radial-gradient(circle, rgba(255,255,255,0.4) 0%, transparent 70%)',
-                        borderRadius: '50%',
-                        zIndex: 1,
-                        animationDelay: `${i * 0.3}s`
-                      }}
-                    />
-                  ))}
                 </div>
               </div>
             )}
