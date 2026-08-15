@@ -14,6 +14,7 @@ import {
   Music,
   Video as VideoIcon,
   Play,
+  Pause,
   Gift,
   Mic,
   Pencil,
@@ -892,6 +893,9 @@ export default function App() {
   const [items, setItems] = useState<any[]>([]);
   const [theme, setTheme] = useState("default");
   const [mood, setMood] = useState("none");
+  const [customMoodSrc, setCustomMoodSrc] = useState<string | null>(null);
+  const [customMoodName, setCustomMoodName] = useState<string | null>(null);
+  const [moodBusy, setMoodBusy] = useState(false);
   const [unlockDate, setUnlockDate] = useState("");
   const [activeForm, setActiveForm] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -916,6 +920,8 @@ export default function App() {
   const [unlockTime, setUnlockTime] = useState<number | null>(null);
   const [viewMode, setViewMode] = useState("classic"); // classic | garden | constellation
   const [lidUp, setLidUp] = useState(false);
+  const [isUntying, setIsUntying] = useState(false);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
   const [reactionText, setReactionText] = useState("");
   const [sendingReaction, setSendingReaction] = useState(false);
   const [showShareSuccess, setShowShareLoveSuccess] = useState(false);
@@ -999,6 +1005,26 @@ export default function App() {
     setItems((prev) => prev.filter((it) => it.id !== id));
   }
 
+  async function handleMoodFile(e: any) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Audio file too large (max 10MB).");
+      return;
+    }
+
+    setMoodBusy(true);
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setCustomMoodSrc(ev.target?.result as string);
+      setCustomMoodName(file.name);
+      setMood("custom");
+      setMoodBusy(false);
+    };
+    reader.readAsDataURL(file);
+  }
+
   async function handlePay() {
     if (!canCheckout) return;
 
@@ -1046,6 +1072,7 @@ export default function App() {
                 items,
                 theme,
                 mood,
+                customMoodSrc,
                 sealedAt: Date.now(),
                 unlockAt: unlockDate ? new Date(unlockDate).getTime() : null,
                 secretWord: secretWord.trim().toLowerCase(),
@@ -1151,18 +1178,41 @@ export default function App() {
   }, []);
 
   function liftLid() {
-    setLidUp(true);
-    // Start audio if mood is set
-    if (openedPackage?.mood && openedPackage.mood !== 'none') {
-      const audioUrl = (MOODS as any)[openedPackage.mood].url;
-      if (audioUrl) {
-        const audio = new Audio(audioUrl);
-        audio.loop = true;
-        audio.play().catch(e => console.error("Audio Play Error:", e));
-        audioRef.current = audio;
-      }
+    if (lidUp || isUntying) return;
+
+    setIsUntying(true);
+
+    // Start audio immediately on user interaction
+    let audioUrl = null;
+    if (openedPackage?.mood === 'custom' && openedPackage.customMoodSrc) {
+      audioUrl = openedPackage.customMoodSrc;
+    } else if (openedPackage?.mood && openedPackage.mood !== 'none') {
+      audioUrl = (MOODS as any)[openedPackage.mood].url;
     }
-    setTimeout(() => setScreen("view"), 650);
+
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audio.loop = true;
+      audio.play().then(() => setIsAudioPlaying(true)).catch(e => console.error("Audio Play Error:", e));
+      audioRef.current = audio;
+    }
+
+    // Sequence: Ribbon slides away (600ms), then lid lifts
+    setTimeout(() => {
+      setLidUp(true);
+      setTimeout(() => setScreen("view"), 650);
+    }, 600);
+  }
+
+  function toggleAudio() {
+    if (!audioRef.current) return;
+    if (isAudioPlaying) {
+      audioRef.current.pause();
+      setIsAudioPlaying(false);
+    } else {
+      audioRef.current.play().catch(e => console.error(e));
+      setIsAudioPlaying(true);
+    }
   }
 
   async function copyCode() {
@@ -1469,6 +1519,24 @@ export default function App() {
           100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), var(--dy)) scale(1) rotate(var(--rot)); }
         }
 
+        @keyframes box-shake {
+          0%, 100% { transform: rotate(0deg); }
+          25% { transform: rotate(1.5deg); }
+          75% { transform: rotate(-1.5deg); }
+        }
+        .box-shaking { animation: box-shake 0.4s ease-in-out infinite; }
+
+        .ribbon-v, .ribbon-h {
+          position: absolute; background: var(--stamp-red);
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          z-index: 5; transition: transform 0.6s cubic-bezier(.32,.9,.4,1.1), opacity 0.4s ease;
+        }
+        .ribbon-v { left: 50%; top: 0; bottom: 0; width: 24px; transform: translateX(-50%); }
+        .ribbon-h { top: 50%; left: 0; right: 0; height: 24px; transform: translateY(-50%); }
+        .ribbon-untied { transform: scale(1.2) rotate(15deg); opacity: 0; pointer-events: none; }
+        .ribbon-v.untied { transform: translateX(-50%) translateY(-100%) scaleY(0); }
+        .ribbon-h.untied { transform: translateY(-50%) translateX(100%) scaleX(0); }
+
         /* ---------- view screen ---------- */
         .view-screen { display: flex; flex-direction: column; align-items: center; gap: 26px; }
         .view-label { position: relative; width: 100%; max-width: 420px; padding: 24px 22px 20px; text-align: center; overflow: hidden; }
@@ -1707,12 +1775,16 @@ export default function App() {
                   <button
                     key={key}
                     className={`btn-secondary ${mood === key ? 'paper-soft' : ''}`}
-                    style={{ padding: '6px 10px', fontSize: 11, border: mood === key ? '1.5px solid var(--airmail)' : '1.5px solid rgba(0,0,0,0.1)' }}
+                    style={{ padding: '6px 10px', fontSize: 11, border: theme === key ? '1.5px solid var(--airmail)' : '1.5px solid rgba(0,0,0,0.1)' }}
                     onClick={() => setMood(key)}
                   >
                     {m.label}
                   </button>
                 ))}
+                <label className={`btn-secondary ${mood === 'custom' ? 'paper-soft' : ''}`} style={{ padding: '6px 10px', fontSize: 11, border: mood === 'custom' ? '1.5px solid var(--airmail)' : '1.5px solid rgba(0,0,0,0.1)', cursor: 'pointer' }}>
+                  {moodBusy ? "Reading..." : customMoodName ? trunc(customMoodName, 12) : "+ Custom Song"}
+                  <input type="file" accept="audio/*" onChange={handleMoodFile} hidden />
+                </label>
               </div>
 
               {items.length > 0 && (
@@ -1956,9 +2028,18 @@ export default function App() {
                 <>
                   <p className="unwrap-lead">
                     A package from <strong>{openedPackage.from}</strong> has arrived.
+                    <br/><span style={{ fontSize: 12, opacity: 0.6 }}>Tap the box to open</span>
                   </p>
-                  <div className="box-visual">
+                  <div
+                    className={`box-visual ${!lidUp && !isUntying ? 'box-shaking' : ''}`}
+                    onClick={liftLid}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className={`box-glow ${lidUp ? "up" : ""}`} />
+                    {/* Ribbons */}
+                    <div className={`ribbon-v ${isUntying ? 'untied' : ''}`} style={{ background: currentTheme.accent }} />
+                    <div className={`ribbon-h ${isUntying ? 'untied' : ''}`} style={{ background: currentTheme.accent }} />
+
                     {lidUp &&
                       CONFETTI.map((c, i) => (
                         <span
@@ -1977,11 +2058,11 @@ export default function App() {
                     <div className="box-body" style={{ background: currentTheme.boxDeep, borderColor: currentTheme.accent }} />
                     <div className={`box-lid ${lidUp ? "up" : ""}`} style={{ background: currentTheme.box, borderColor: currentTheme.accent }} />
                     {currentTheme.waxSeal ? (
-                      <div className={`box-tape ${lidUp ? "peeled" : ""}`} style={{ borderRadius: '50%', width: 40, height: 40, background: currentTheme.accent, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20 }}>❦</div>
+                      <div className={`box-tape ${lidUp || isUntying ? "peeled" : ""}`} style={{ borderRadius: '50%', width: 40, height: 40, background: currentTheme.accent, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 20, zIndex: 10 }}>❦</div>
                     ) : currentTheme.ribbon ? (
-                      <div className={`box-tape ${lidUp ? "peeled" : ""}`} style={{ width: '100%', height: 10, background: currentTheme.accent, border: 'none' }} />
+                      <div className={`box-tape ${lidUp || isUntying ? "peeled" : ""}`} style={{ width: '100%', height: 10, background: currentTheme.accent, border: 'none', zIndex: 10 }} />
                     ) : (
-                      <div className={`box-tape ${lidUp ? "peeled" : ""}`}>SEALED WITH CARE</div>
+                      <div className={`box-tape ${lidUp || isUntying ? "peeled" : ""}`} style={{ zIndex: 10 }}>SEALED WITH CARE</div>
                     )}
                     {currentTheme.stars && !lidUp && (
                       <div style={{ position: 'absolute', inset: 10, pointerEvents: 'none' }}>
@@ -1991,9 +2072,11 @@ export default function App() {
                       </div>
                     )}
                   </div>
-                  <button className="btn-primary" onClick={liftLid} disabled={lidUp}>
-                    Lift the lid
-                  </button>
+                  <div style={{ marginTop: 20 }}>
+                    <button className="btn-primary" onClick={liftLid} disabled={lidUp || isUntying}>
+                      {isUntying ? "Unwrapping..." : "Tap to open"}
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -2002,28 +2085,41 @@ export default function App() {
 
         {screen === "view" && openedPackage && (
           <div className="view-screen">
-            <div style={{ display: 'flex', gap: 10, marginBottom: 10, flexWrap: 'wrap' }}>
-              <button
-                className={`btn-secondary ${viewMode === 'classic' ? 'paper-soft' : ''}`}
-                style={{ padding: '6px 14px', fontSize: 12, opacity: viewMode === 'classic' ? 1 : 0.6 }}
-                onClick={() => setViewMode('classic')}
-              >
-                Classic Scrapbook
-              </button>
-              <button
-                className={`btn-secondary ${viewMode === 'garden' ? 'paper-soft' : ''}`}
-                style={{ padding: '6px 14px', fontSize: 12, opacity: viewMode === 'garden' ? 1 : 0.6 }}
-                onClick={() => setViewMode('garden')}
-              >
-                ✨ Memory Garden
-              </button>
-              <button
-                className={`btn-secondary ${viewMode === 'constellation' ? 'paper-soft' : ''}`}
-                style={{ padding: '6px 14px', fontSize: 12, opacity: viewMode === 'constellation' ? 1 : 0.6 }}
-                onClick={() => setViewMode('constellation')}
-              >
-                🌌 Constellation View
-              </button>
+            <div style={{ display: 'flex', gap: 10, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: 10 }}>
+                <button
+                  className={`btn-secondary ${viewMode === 'classic' ? 'paper-soft' : ''}`}
+                  style={{ padding: '6px 14px', fontSize: 12, opacity: viewMode === 'classic' ? 1 : 0.6 }}
+                  onClick={() => setViewMode('classic')}
+                >
+                  Classic Scrapbook
+                </button>
+                <button
+                  className={`btn-secondary ${viewMode === 'garden' ? 'paper-soft' : ''}`}
+                  style={{ padding: '6px 14px', fontSize: 12, opacity: viewMode === 'garden' ? 1 : 0.6 }}
+                  onClick={() => setViewMode('garden')}
+                >
+                  ✨ Memory Garden
+                </button>
+                <button
+                  className={`btn-secondary ${viewMode === 'constellation' ? 'paper-soft' : ''}`}
+                  style={{ padding: '6px 14px', fontSize: 12, opacity: viewMode === 'constellation' ? 1 : 0.6 }}
+                  onClick={() => setViewMode('constellation')}
+                >
+                  🌌 Constellation View
+                </button>
+              </div>
+
+              {audioRef.current && (
+                <button
+                  className="btn-stamp"
+                  style={{ padding: '6px 14px', fontSize: 12, height: 'auto', borderStyle: 'dashed' }}
+                  onClick={toggleAudio}
+                >
+                  {isAudioPlaying ? <Pause size={14} /> : <Play size={14} />}
+                  {isAudioPlaying ? "Pause Music" : "Play Music"}
+                </button>
+              )}
             </div>
 
             {viewMode === "classic" ? (

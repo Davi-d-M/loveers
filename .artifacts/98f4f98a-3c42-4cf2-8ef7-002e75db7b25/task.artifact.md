@@ -1,8 +1,10 @@
-- [ ] **"Topic of Love" Expansion**
-    - [ ] Add "Share the Love" ❤️ button to Home and View screens
-    - [ ] Create "Love Hub" landing section in `App.tsx`
-    - [ ] Implement "Inspire Me" quote generator in Note modal
-    - [ ] Update `index.html` with broader love-themed metadata
+- [ ] **Custom Music Upload & Controls**
+    - [ ] Implement local audio file picker and reader (10MB limit)
+    - [ ] Update creation UI to include "Upload Your Own Song"
+    - [ ] Add `isAudioPlaying` state and play/pause controller UI
+    - [ ] Update unboxing logic to prioritize uploaded music
+    - [ ] Sync audio controls with recipient's view
 - [ ] **Verification**
-    - [ ] Test share functionality
-    - [ ] Verify homepage content and SEO tags
+    - [ ] Test custom MP3 upload flow
+    - [ ] Verify play/pause toggle functionality
+    - [ ] Check audio persistence across view modes

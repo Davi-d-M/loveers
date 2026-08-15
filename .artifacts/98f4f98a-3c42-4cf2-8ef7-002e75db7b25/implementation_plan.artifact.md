@@ -1,40 +1,33 @@
-# Implementation Plan - "Topic of Love" Search Optimization
+# Implementation Plan - Custom Music Upload & Audio Controls
 
-This plan expands EverGift's reach to rank for broad "love" and "relationship" topics on Google and AI recommendation engines.
+This plan adds the ability for senders to upload their own background music from their device and provides a play/pause controller for recipients.
 
 ## Proposed Changes
 
-### [Social] "Share the Love" Button
-Encourage users to share the app link with their friends.
-- **UI**: Add a floating or prominent button with a heart icon (❤️) and the label "Share the Love."
-- **Functionality**: Use the Web Share API (if available) or copy to clipboard to share the main app URL (`loveers.vercel.app`).
-- **Placement**: Add to the home screen and the footer of the "View" screen.
-
-### [SEO] The "Love Hub" Landing Section
-Add a content-rich section below the main choices on the homepage to capture users searching for relationship inspiration.
+### [Upload] Local Music Selection
+Allow users to pick a song from their phone to play during the unboxing.
 
 #### [MODIFY] [App.tsx](file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
-- Add an "Inspiration & Stories" section to the home screen.
-- Include keyword-rich paragraphs about "modern love," "long-distance connection," and "digital keepsakes."
-- Add a "Wall of Love" (mock testimonials) to increase social proof and keyword density.
+- Add a "Custom Upload" option to the background mood selection.
+- Implement `handleMusicFile` to read the audio file as a base64 string (with a 10MB limit).
+- Store the custom audio in a new `customAudioSrc` field in the package payload.
 
-### [Feature] "Inspire Me" Quote Generator
-Help users rank for "love quotes" while providing value during the gift-making process.
+### [UX] Play/Pause Controller
+Add a subtle floating music control for the recipient.
 
 #### [MODIFY] [App.tsx](file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
-- Add an "Inspire Me" button to the Note modal.
-- Create a list of 20+ ethereal love quotes that can be instantly added to a note.
+- Add a state `isAudioPlaying` to track playback.
+- Implement a small floating music button (using `Music` / `Pause` / `Play` icons) in the `view` screen.
+- Ensure the controller works with both pre-set "Moods" and "Custom Uploads".
 
-### [Metadata] Broader "Love" Keywords
-Refine the site metadata to target more general romantic search terms.
-
-#### [MODIFY] [index.html](file:///C:/Users/hp/AndroidStudioProjects/love/index.html)
-- Add keywords: "relationship goals", "romantic ideas", "how to show love", "long distance relationship help", "heartfelt messages".
-- Update the OG title to: "EverGift — The Digital Home for Your Love Story".
+### [Atmosphere] Audio Logic
+- Update the unboxing sequence to prioritize `customAudioSrc` if available.
+- Ensure Voice Notes still work independently (the background music should ideally dim or pause when a VN is played, but for simplicity, we will start with a manual toggle).
 
 ## Verification Plan
 
 ### Manual Verification
-1. **Content Check**: Scroll down on the homepage and verify the "Love Hub" section looks beautiful and contains the new keywords.
-2. **Quote Check**: Open the Note modal, click "Inspire Me," and verify a quote is generated.
-3. **SEO Check**: Verify the `<title>` and `<meta>` tags now include the broader love terms.
+1. **Upload Test**: In "Pack a package", choose "Custom" mood, select an MP3 from your phone, and verify it can be added.
+2. **Unwrap Test**: Open the box and verify the custom song starts playing.
+3. **Control Test**: Use the new pause/play button to stop and restart the music.
+4. **Volume Check**: Ensure the custom audio isn't too loud or quiet compared to the system sounds.
