@@ -1,28 +1,37 @@
-# Implementation Plan - Final Render Path & Build Fix
+# Implementation Plan - Definitive Render Fix & Secret Vault Polish
 
-This plan resolves the "File Not Found" error on Render by fixing path resolution and cleaning up duplicate dependencies that may be confusing the build process.
+This plan resolves the "Frontend build not found" error on Render and ensures the Secret Vault (Password Protection) is robust and easy to use.
 
 ## Proposed Changes
 
-### [Build] Clean up package.json
-Remove duplicate dependencies and ensure the build script is simple and standard.
-
-#### [MODIFY] [package.json](file:///C:/Users/hp/AndroidStudioProjects/love/package.json)
-- Remove duplicate `vite` entries.
-- Ensure `build` command is just `vite build`.
-- Keep `start` command as `tsx server.ts`.
-
-### [Server] Robust Path Resolution
-Ensure the server finds the `dist` folder regardless of how Render structures the environment.
+### [Server] Definitive Path Resolution
+Ensure the server serves the frontend files correctly on Render by simplifying the static serving logic.
 
 #### [MODIFY] [server.ts](file:///C:/Users/hp/AndroidStudioProjects/love/server.ts)
-- Use `path.resolve` to find the `dist` directory.
-- Add detailed logging to show the absolute path being served.
-- Add a check to verify if the `dist` folder exists before starting the static server.
+- Simplify path resolution to use `path.join(process.cwd(), 'dist')`.
+- Remove the conditional `fs.existsSync` check for `express.static` to let Express handle the mapping.
+- Add more detailed logging for Paystack verification to catch "System Errors" early.
+
+### [UX] Secret Vault Polish
+Make the password protection feature more obvious and robust.
+
+#### [MODIFY] [App.tsx](file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
+- **Sender UI**: Update the "Secret Word" section to have a clearer "Save" feedback.
+- **Recipient UI**: Fix a potential loop where a wrong password might not show a clear error message.
+- **Cleanup**: Double-check for any remaining "non-memory" content (AI content).
+
+### [Build] Clean Dependencies
+Ensure Render has everything it needs to build successfully.
+
+#### [MODIFY] [package.json](file:///C:/Users/hp/AndroidStudioProjects/love/package.json)
+- Ensure all build-time tools like `tsx` are in `dependencies` (not `devDependencies`) because Render needs them at runtime.
 
 ## Verification Plan
 
+### Automated Tests
+- Run `npm run build` locally.
+- Start the server and verify it serves `index.html` correctly.
+
 ### Manual Verification
-1. **Local Test**: Run `npm run build` then `npm start`. Verify it works locally.
-2. **Path Debug**: Check the logs on Render to see exactly where the server is looking for `index.html`.
-3. **Redeploy**: Push to GitHub and verify Render finds the files.
+1. **Unbox Test**: Set a secret word, open the link, and verify the password prompt works.
+2. **Payment Test**: Monitor the logs for a successful Paystack handshake.

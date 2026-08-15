@@ -1,7 +1,9 @@
-- [ ] **Final Render Fix**
-    - [ ] Cleanup `package.json` duplicates
-    - [ ] Fix path resolution in `server.ts`
-    - [ ] Add path debugging logs to `server.ts`
+- [ ] **Definitive Render Fix**
+    - [ ] Simplify `server.ts` path resolution
+    - [ ] Add better logging for Paystack verification
+- [ ] **Secret Vault Polish**
+    - [ ] Improve Secret Word UI in `App.tsx`
+    - [ ] Remove any remaining Sparkles/AI remnants
 - [ ] **Verification**
-    - [ ] Run local build test
+    - [ ] Local build & run check
     - [ ] Push to GitHub

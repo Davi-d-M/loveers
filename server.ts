@@ -1,10 +1,6 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
@@ -50,76 +46,49 @@ app.get("/api/paystack/verify/:reference", async (req, res) => {
   }
 });
 
-// Environment-based setup
+// --- Production Mode (Render, Vercel, etc.) ---
+const PORT = Number(process.env.PORT) || 3000;
 const isVercel = !!process.env.VERCEL;
-const isProd = process.env.NODE_ENV === "production" || !!process.env.RENDER;
 
-if (!isProd && !isVercel) {
-  // --- Local Development Mode ---
-  const setupDev = async () => {
-    const { createServer: createViteServer } = await import("vite");
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
+// Explicitly resolve the dist folder path
+const distPath = path.resolve(process.cwd(), "dist");
+const indexPath = path.join(distPath, "index.html");
 
-    const PORT = 3000;
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`EverGift dev server listening on http://localhost:${PORT}`);
-    });
-  };
-  setupDev();
-} else {
-  // --- Production Mode (Render, Vercel, etc.) ---
-  const PORT = Number(process.env.PORT) || 3000;
+console.log(`[Server] Runtime Directory: ${process.cwd()}`);
+console.log(`[Server] Serving static files from: ${distPath}`);
 
-  // Resolve absolute path to dist relative to this file
-  const distPath = path.resolve(__dirname, "dist");
-  const indexPath = path.join(distPath, "index.html");
+// Static files (CSS, JS, Images)
+app.use(express.static(distPath));
 
-  console.log(`[Server] Production mode active.`);
-  console.log(`[Server] __dirname: ${__dirname}`);
-  console.log(`[Server] Serving static files from: ${distPath}`);
+// API fallback (if no endpoint matched above)
+app.use('/api/*', (req, res) => {
+  res.status(404).json({ error: 'API endpoint not found' });
+});
 
-  // Safety check: Verify dist folder exists
-  if (fs.existsSync(distPath)) {
-    console.log(`[Server] Found dist folder at: ${distPath}`);
-    app.use(express.static(distPath));
+// Catch-all route to serve the frontend index.html
+app.get("*", (req, res) => {
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
   } else {
-    console.warn(`[Server] WARNING: dist folder NOT found at: ${distPath}`);
-    // Check if dist exists in current working directory as fallback
-    const cwdDist = path.resolve(process.cwd(), "dist");
-    if (fs.existsSync(cwdDist)) {
-      console.log(`[Server] Fallback: Found dist folder in CWD: ${cwdDist}`);
-      app.use(express.static(cwdDist));
-    } else {
-      console.error(`[Server] CRITICAL: Could not find dist folder in __dirname or CWD.`);
-      console.log(`[Server] Files in __dirname:`, fs.readdirSync(__dirname));
-    }
+    console.error(`[Server] ERROR: index.html not found at: ${indexPath}`);
+    res.status(404).send(`
+      <html>
+        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+          <h1>Frontend build not found</h1>
+          <p>Please ensure 'npm run build' completed successfully on Render.</p>
+          <hr/>
+          <p style="color: gray;">Looking in: ${indexPath}</p>
+        </body>
+      </html>
+    `);
   }
+});
 
-  // Catch-all route to serve the frontend for any non-API path
-  app.get("*", (req, res, next) => {
-    if (req.url.startsWith('/api/')) return next();
-
-    // Try to serve index.html from __dirname/dist or process.cwd()/dist
-    const finalIndexPath = fs.existsSync(indexPath) ? indexPath : path.join(process.cwd(), "dist", "index.html");
-
-    if (fs.existsSync(finalIndexPath)) {
-      res.sendFile(finalIndexPath);
-    } else {
-      console.error(`[Server] ERROR: index.html not found anywhere.`);
-      res.status(404).send("Frontend build not found. Please ensure 'npm run build' completed successfully.");
-    }
+// Only listen on a port if not on Vercel
+if (!isVercel) {
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`EverGift production server listening on port ${PORT}`);
   });
-
-  // Only listen on a port if not on Vercel (Vercel handles the listener)
-  if (!isVercel) {
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`EverGift production server listening on port ${PORT}`);
-    });
-  }
 }
 
 export default app;
