@@ -1,6 +1,10 @@
 import express from "express";
 import path from "path";
 import fs from "fs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
@@ -70,11 +74,12 @@ if (!isProd && !isVercel) {
   // --- Production Mode (Render, Vercel, etc.) ---
   const PORT = Number(process.env.PORT) || 3000;
 
-  // Resolve absolute path to dist
-  const distPath = path.resolve(process.cwd(), "dist");
+  // Resolve absolute path to dist relative to this file
+  const distPath = path.resolve(__dirname, "dist");
   const indexPath = path.join(distPath, "index.html");
 
   console.log(`[Server] Production mode active.`);
+  console.log(`[Server] __dirname: ${__dirname}`);
   console.log(`[Server] Serving static files from: ${distPath}`);
 
   // Safety check: Verify dist folder exists
@@ -83,18 +88,29 @@ if (!isProd && !isVercel) {
     app.use(express.static(distPath));
   } else {
     console.warn(`[Server] WARNING: dist folder NOT found at: ${distPath}`);
-    console.log(`[Server] Current directory content:`, fs.readdirSync(process.cwd()));
+    // Check if dist exists in current working directory as fallback
+    const cwdDist = path.resolve(process.cwd(), "dist");
+    if (fs.existsSync(cwdDist)) {
+      console.log(`[Server] Fallback: Found dist folder in CWD: ${cwdDist}`);
+      app.use(express.static(cwdDist));
+    } else {
+      console.error(`[Server] CRITICAL: Could not find dist folder in __dirname or CWD.`);
+      console.log(`[Server] Files in __dirname:`, fs.readdirSync(__dirname));
+    }
   }
 
   // Catch-all route to serve the frontend for any non-API path
   app.get("*", (req, res, next) => {
     if (req.url.startsWith('/api/')) return next();
 
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
+    // Try to serve index.html from __dirname/dist or process.cwd()/dist
+    const finalIndexPath = fs.existsSync(indexPath) ? indexPath : path.join(process.cwd(), "dist", "index.html");
+
+    if (fs.existsSync(finalIndexPath)) {
+      res.sendFile(finalIndexPath);
     } else {
-      console.error(`[Server] ERROR: index.html not found at: ${indexPath}`);
-      res.status(404).send("Frontend build not found. Please run 'npm run build' first.");
+      console.error(`[Server] ERROR: index.html not found anywhere.`);
+      res.status(404).send("Frontend build not found. Please ensure 'npm run build' completed successfully.");
     }
   });
 
