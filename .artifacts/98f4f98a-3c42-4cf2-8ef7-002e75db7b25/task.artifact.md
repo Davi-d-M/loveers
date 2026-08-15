@@ -1,7 +1,7 @@
-- [ ] **Fix Hardcoded Redirection**
-    - [ ] Update `handleShareLove` in `App.tsx` to use `window.location.origin`
-    - [ ] Update Browser Shield "Copy Link" to use dynamic URL
-    - [ ] Add "Bypass Shield" state to prevent detection loops
-- [ ] **Verification & Deployment**
-    - [ ] Run `npm run build` and `npm run lint`
+- [ ] **Final Render Fix**
+    - [ ] Cleanup `package.json` duplicates
+    - [ ] Fix path resolution in `server.ts`
+    - [ ] Add path debugging logs to `server.ts`
+- [ ] **Verification**
+    - [ ] Run local build test
     - [ ] Push to GitHub

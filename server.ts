@@ -1,5 +1,6 @@
 import express from "express";
 import path from "path";
+import fs from "fs";
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
@@ -68,15 +69,33 @@ if (!isProd && !isVercel) {
 } else {
   // --- Production Mode (Render, Vercel, etc.) ---
   const PORT = Number(process.env.PORT) || 3000;
-  const distPath = path.join(process.cwd(), "dist");
 
-  // Serve static files from the 'dist' directory
-  app.use(express.static(distPath));
+  // Resolve absolute path to dist
+  const distPath = path.resolve(process.cwd(), "dist");
+  const indexPath = path.join(distPath, "index.html");
+
+  console.log(`[Server] Production mode active.`);
+  console.log(`[Server] Serving static files from: ${distPath}`);
+
+  // Safety check: Verify dist folder exists
+  if (fs.existsSync(distPath)) {
+    console.log(`[Server] Found dist folder at: ${distPath}`);
+    app.use(express.static(distPath));
+  } else {
+    console.warn(`[Server] WARNING: dist folder NOT found at: ${distPath}`);
+    console.log(`[Server] Current directory content:`, fs.readdirSync(process.cwd()));
+  }
 
   // Catch-all route to serve the frontend for any non-API path
   app.get("*", (req, res, next) => {
     if (req.url.startsWith('/api/')) return next();
-    res.sendFile(path.join(distPath, "index.html"));
+
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      console.error(`[Server] ERROR: index.html not found at: ${indexPath}`);
+      res.status(404).send("Frontend build not found. Please run 'npm run build' first.");
+    }
   });
 
   // Only listen on a port if not on Vercel (Vercel handles the listener)
