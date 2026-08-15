@@ -45,8 +45,12 @@ app.get("/api/paystack/verify/:reference", async (req, res) => {
   }
 });
 
-// Development vs Production setup
-if (process.env.NODE_ENV !== "production" && !process.env.VERCEL && !process.env.RENDER) {
+// Environment-based setup
+const isVercel = !!process.env.VERCEL;
+const isProd = process.env.NODE_ENV === "production" || !!process.env.RENDER;
+
+if (!isProd && !isVercel) {
+  // --- Local Development Mode ---
   const setupDev = async () => {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
@@ -57,25 +61,30 @@ if (process.env.NODE_ENV !== "production" && !process.env.VERCEL && !process.env
 
     const PORT = 3000;
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`EverGift server listening on http://localhost:${PORT}`);
+      console.log(`EverGift dev server listening on http://localhost:${PORT}`);
     });
   };
   setupDev();
-} else if (!process.env.VERCEL) {
-  // Production (Render, etc.)
+} else {
+  // --- Production Mode (Render, Vercel, etc.) ---
   const PORT = Number(process.env.PORT) || 3000;
   const distPath = path.join(process.cwd(), "dist");
 
+  // Serve static files from the 'dist' directory
   app.use(express.static(distPath));
 
+  // Catch-all route to serve the frontend for any non-API path
   app.get("*", (req, res, next) => {
     if (req.url.startsWith('/api/')) return next();
     res.sendFile(path.join(distPath, "index.html"));
   });
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`EverGift production server listening on port ${PORT}`);
-  });
+  // Only listen on a port if not on Vercel (Vercel handles the listener)
+  if (!isVercel) {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`EverGift production server listening on port ${PORT}`);
+    });
+  }
 }
 
 export default app;
