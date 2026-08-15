@@ -21,7 +21,6 @@ import {
   MapPin,
   Ticket,
   Newspaper,
-  Sparkles,
   Heart,
 } from "lucide-react";
 
@@ -1504,7 +1503,7 @@ export default function App() {
                     ) : (
                       <div className={`box-tape ${lidUp || isUntying ? "peeled" : ""}`} style={{ zIndex: 10 }}>SEALED WITH CARE</div>
                     )}
-                    {currentTheme.stars && !lidUp && <div style={{ position: 'absolute', inset: 10, pointerEvents: 'none' }}>{[...Array(6)].map((_, i) => <Sparkles key={i} size={12} color="#fff" style={{ position: 'absolute', left: `${Math.random() * 80 + 10}%`, top: `${Math.random() * 80 + 10}%`, opacity: 0.6 }} />)}</div>}
+                    {currentTheme.stars && !lidUp && <div style={{ position: 'absolute', inset: 10, pointerEvents: 'none' }}>{[...Array(6)].map((_, i) => <div key={i} style={{ position: 'absolute', left: `${Math.random() * 80 + 10}%`, top: `${Math.random() * 80 + 10}%`, width: 4, height: 4, background: '#fff', borderRadius: '50%', opacity: 0.6, boxShadow: '0 0 5px #fff' }} />)}</div>}
                   </div>
                   <div style={{ marginTop: 20 }}><button className="btn-primary" onClick={liftLid} disabled={lidUp || isUntying}>{isUntying ? "Unwrapping..." : "Tap to open"}</button></div>
                 </>

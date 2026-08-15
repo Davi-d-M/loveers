@@ -1,6 +1,6 @@
 {
-  "name": "EverGift - Ethereal Memory & Gift Vault",
-  "description": "An interactive digital memory platform and care package builder featuring Memory Garden, Constellation View, Time Capsules, AI Letter Assistant, and interactive gift opening experiences.",
+  "name": "EverGift - Ethereal Memory Vault",
+  "description": "A private digital memory platform and care package builder for sharing real memories through 3D visualizations and personalized keepsakes.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": []
 }
