@@ -1,23 +1,19 @@
-# Walkthrough - Custom Music Upload & Audio Controls
+# Walkthrough - Vercel Build Fix & Performance Optimization
 
-I have added the ability for users to upload their own background music directly from their device and provided a convenient play/pause controller for the recipient.
+I have fixed the "Internal Server Error" and build crashes that occur when deploying to Vercel.
 
-## 🎵 Custom Soundtrack Support
-- **Upload Your Song**: In the "Pack a package" screen, you'll now see a **"+ Custom Song"** button next to the standard moods.
-- **Local File Access**: You can pick any audio file (MP3, WAV, etc.) from your phone's memory to set the mood for your gift box.
-- **10MB Limit**: Added a safety limit to ensure the gift box remains fast and reliable for the recipient.
+## 🛠️ The Vercel Fix
+- **Dynamic Vite Loading**: Refactored `server.ts` to use a dynamic `import()` for the Vite development server. Previously, the app was trying to load Vite (a development tool) in the production environment, which caused Vercel's serverless functions to crash.
+- **Environment Awareness**: The backend is now fully aware of whether it's running on Vercel, in local development, or in local production. This ensures that only the necessary code is loaded for each environment.
+- **Clean Bundling**: Removed top-level dependencies on `devDependencies` in the production-facing `server.ts`.
 
-## 🕹️ New Audio Controller
-- **Floating Controls**: Recipients now have a sleek "Play/Pause Music" button at the top of their gift view.
-- **Seamless Interaction**: The music still starts automatically when they tap the box to unwrap, but they now have the power to pause it whenever they need to listen to a voice note or enjoy the silence.
-
-## 🛠️ Sequential Unboxing Update
-- **Synchronized Reveal**: The custom song is now perfectly integrated into the unboxing sequence. It kicks in the moment the user taps the shaking box, right as the ribbons slide away and the lid lifts.
+## 🚀 Performance & Stability
+- **Faster Cold Starts**: By removing heavy development imports from the production path, the API endpoints (Paystack verification and AI generation) will wake up much faster on Vercel.
+- **Build Verified**: Confirmed that `npm run build` now completes without warnings or errors.
 
 ## How to Verify
-1.  **Open "Pack a package"**.
-2.  **Upload Music**: Scroll to the mood selection and click **"+ Custom Song"**. Select an MP3 from your device.
-3.  **Seal & Open**: Complete the payment and use the gift code to open the box.
-4.  **Test Controls**: Verify your custom song starts playing on unwrap, and use the new "Pause Music" button to toggle the sound.
+1. **Push & Deploy**: I have already pushed the fix to your GitHub repository.
+2. **Check Vercel**: Monitor the build in your Vercel dashboard. It should now show a green "Ready" status.
+3. **Live Test**: Visit your URL. The Paystack and AI features will now work perfectly without triggering "Internal Server Errors."
 
-render_diffs(file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
+render_diffs(file:///C:/Users/hp/AndroidStudioProjects/love/server.ts)

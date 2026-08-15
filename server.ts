@@ -1,7 +1,6 @@
 import express from "express";
 import path from "path";
 import { GoogleGenAI } from "@google/genai";
-import { createServer as createViteServer } from "vite";
 
 const app = express();
 app.use(express.json({ limit: "10mb" }));
@@ -124,6 +123,7 @@ Return pure JSON with format:
 // Development vs Production setup
 if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
   const setupDev = async () => {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
