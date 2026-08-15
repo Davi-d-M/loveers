@@ -953,8 +953,9 @@ export default function App() {
               setScreen("sealed");
               setVerifying(false);
               setPaying(false);
-            } catch (err) {
-              setSealError("System error during verification.");
+            } catch (err: any) {
+              console.error("Verification Error:", err);
+              setSealError(`Error: ${err.message || "System error during verification"}`);
               setVerifying(false);
               setPaying(false);
             }

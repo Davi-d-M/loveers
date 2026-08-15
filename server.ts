@@ -10,26 +10,37 @@ app.get("/api/health", (_req, res) => {
 
 // Paystack Transaction Verification Endpoint
 app.get("/api/paystack/verify/:reference", async (req, res) => {
+  const { reference } = req.params;
+  console.log(`[Paystack] Verifying reference: ${reference}`);
+
   try {
-    const { reference } = req.params;
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
     if (!secretKey) {
-      return res.status(500).json({ error: "PAYSTACK_SECRET_KEY is not configured." });
+      console.error("[Paystack] PAYSTACK_SECRET_KEY is missing in environment variables.");
+      return res.status(500).json({ status: false, message: "PAYSTACK_SECRET_KEY is not configured." });
     }
 
     const response = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${secretKey}`,
+        "Content-Type": "application/json",
       },
     });
 
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[Paystack] API Error: ${response.status} - ${errorText}`);
+      return res.status(response.status).json({ status: false, message: "Paystack API connection error." });
+    }
+
     const data = await response.json();
+    console.log(`[Paystack] Verification result for ${reference}:`, data.status);
     res.json(data);
   } catch (err: any) {
-    console.error("Paystack Verification Error:", err);
-    res.status(500).json({ error: err?.message || "Verification failed" });
+    console.error("[Paystack] Unexpected Verification Error:", err);
+    res.status(500).json({ status: false, message: err?.message || "Internal server verification error" });
   }
 });
 

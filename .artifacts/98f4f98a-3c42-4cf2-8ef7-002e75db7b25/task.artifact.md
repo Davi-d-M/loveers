@@ -1,14 +1,9 @@
-- [x] **Cleanup AI & Mock Content**
-    - [x] Remove `LOVE_QUOTES` and `handleInspireMe` in `App.tsx`
-    - [x] Remove `handleMagicWrite` and related UI buttons in `App.tsx`
-    - [x] Remove "Love Hub" section from Home screen in `App.tsx`
-    - [x] Remove "Memory Garden" view mode in `App.tsx`
-    - [x] Remove Gemini AI endpoints and imports in `server.ts`
-    - [x] Remove `@google/genai` dependency in `package.json`
-    - [x] Remove `Sparkles` icon from `App.tsx`
-- [x] **Vercel Optimization**
-    - [x] Clean up top-level imports in `server.ts`
-    - [x] Ensure static serving logic is robust
-- [x] **Verification & Deployment**
-    - [x] Run `npm run build` and `npm run lint`
-    - [x] Push to GitHub
+- [x] **Vercel Build Fix & Performance Optimization**
+    - [x] Fix production import crash
+    - [x] Purge AI/Mock content
+    - [x] Fix JSX syntax errors
+    - [x] Explicitly set output directory
+- [ ] **Debug System Error**
+    - [ ] Add descriptive error reporting to `App.tsx`
+    - [ ] Add backend logging to `server.ts`
+    - [ ] Push to GitHub and test
