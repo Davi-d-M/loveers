@@ -1042,10 +1042,20 @@ export default function App() {
     try {
       const params = new URLSearchParams(window.location.search);
       const codeFromUrl = params.get("code");
+
       if (codeFromUrl) {
         const code = codeFromUrl.trim().toUpperCase();
         setEnterCode(code);
         loadPackage(code);
+      } else {
+        // Legacy Link Parsing (e.g. /path/CODE.html)
+        const path = window.location.pathname;
+        const match = path.match(/\/([A-Za-z0-9_-]+)\.html$/);
+        if (match && match[1]) {
+          const code = match[1].trim().toUpperCase();
+          setEnterCode(code);
+          loadPackage(code);
+        }
       }
     } catch (e) {}
   }, []);
