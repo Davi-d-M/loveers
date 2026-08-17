@@ -56,11 +56,14 @@ const isVercel = !!process.env.VERCEL;
 
 const getProductionPaths = () => {
   const possiblePaths = [
-    path.join(process.cwd(), "dist"),
-    path.join(__dirname, "dist"),
-    path.join(process.cwd(), "src", "dist"),
-    path.join(__dirname, "..", "dist")
+    path.resolve(process.cwd(), "dist"),
+    path.resolve(__dirname, "dist"),
+    path.resolve(__dirname, "..", "dist"),
+    path.resolve(process.cwd(), "..", "dist")
   ];
+
+  console.log(`[Server] Searching for build in:`);
+  possiblePaths.forEach(p => console.log(` - ${p}`));
 
   for (const p of possiblePaths) {
     const indexPath = path.join(p, "index.html");
@@ -95,17 +98,27 @@ app.get("*", (req, res, next) => {
   }
 
   // If still not found, log directory structure to help debug
-  console.error(`[Server] CRITICAL: index.html not found.`);
-  console.log(`[Server] Directory Scan (CWD):`, fs.readdirSync(process.cwd()));
-  try { console.log(`[Server] Directory Scan (DIR):`, fs.readdirSync(__dirname)); } catch(e) {}
+  let dirCont: string[] = [];
+  let rootCont: string[] = [];
+  try { dirCont = fs.readdirSync(process.cwd()); } catch (e) { dirCont = ["Error reading CWD"]; }
+  try { rootCont = fs.readdirSync(path.resolve(process.cwd(), "..")); } catch (e) { rootCont = ["Error reading Root"]; }
 
   res.status(404).send(`
     <html>
-      <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-        <h1>Memory Vault: Under Construction</h1>
-        <p>The frontend is still being tucked into the box. Please refresh in a moment.</p>
+      <body style="font-family: sans-serif; text-align: center; padding: 50px; background: #faf9f8; color: #333;">
+        <h1>Memory Vault: Build Link Missing</h1>
+        <p>The server is looking for the <b>dist</b> folder but can't find it in the current environment.</p>
+
+        <div style="text-align: left; background: #eee; padding: 20px; display: inline-block; border-radius: 8px; font-family: monospace; max-width: 80%; overflow-x: auto;">
+          <b>Current Folder:</b> ${process.cwd()}<br/>
+          <b>Files in this folder:</b><br/>
+          ${dirCont.map(f => `- ${f}`).join('<br/>')}
+          <br/><br/>
+          <b>Files in parent folder:</b><br/>
+          ${rootCont.map(f => `- ${f}`).join('<br/>')}
+        </div>
         <hr/>
-        <p style="color: gray; font-size: 10px;">Search Path: ${process.cwd()}</p>
+        <p><b>Action Required:</b> Check your Render dashboard. Ensure your "Build Command" is <code>npm run build</code> and that it completed without errors.</p>
       </body>
     </html>
   `);
