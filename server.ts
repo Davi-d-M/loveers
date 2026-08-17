@@ -23,7 +23,7 @@ app.get("/api/paystack/verify/:reference", async (req, res) => {
     const secretKey = process.env.PAYSTACK_SECRET_KEY;
 
     if (!secretKey) {
-      console.error("[Paystack] PAYSTACK_SECRET_KEY is missing in environment variables.");
+      console.error("[Paystack] PAYSTACK_SECRET_KEY is missing.");
       return res.status(500).json({ status: false, message: "PAYSTACK_SECRET_KEY is not configured." });
     }
 
@@ -50,19 +50,20 @@ app.get("/api/paystack/verify/:reference", async (req, res) => {
   }
 });
 
-// --- Smart Path Discovery for Production ---
-const PORT = Number(process.env.PORT) || 3000;
+// --- Enhanced Path Discovery ---
 const isVercel = !!process.env.VERCEL;
+const isProd = process.env.NODE_ENV === "production" || !!process.env.RENDER;
 
 const getProductionPaths = () => {
   const possiblePaths = [
     path.resolve(process.cwd(), "dist"),
     path.resolve(__dirname, "dist"),
     path.resolve(__dirname, "..", "dist"),
-    path.resolve(process.cwd(), "..", "dist")
+    path.resolve(process.cwd(), "..", "dist"),
+    path.resolve("/opt/render/project/src", "dist") // Explicit Render path
   ];
 
-  console.log(`[Server] Searching for build in:`);
+  console.log(`[Server] Searching for 'dist' in:`);
   possiblePaths.forEach(p => console.log(` - ${p}`));
 
   for (const p of possiblePaths) {
@@ -74,60 +75,71 @@ const getProductionPaths = () => {
   return null;
 };
 
-const paths = getProductionPaths();
+if (!isProd && !isVercel) {
+  // Development Mode
+  const setupDev = async () => {
+    const { createServer: createViteServer } = await import("vite");
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: "spa",
+    });
+    app.use(vite.middlewares);
 
-if (paths) {
-  console.log(`[Server] Success! Found dist at: ${paths.distPath}`);
-  app.use(express.static(paths.distPath));
+    const PORT = 3000;
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`EverGift dev server listening on http://localhost:${PORT}`);
+    });
+  };
+  setupDev();
 } else {
-  console.warn(`[Server] Initial path discovery failed. Current CWD: ${process.cwd()}`);
-}
+  // Production Mode
+  const paths = getProductionPaths();
 
-// Catch-all route
-app.get("*", (req, res, next) => {
-  if (req.url.startsWith('/api/')) return next();
-
-  if (paths && fs.existsSync(paths.indexPath)) {
-    return res.sendFile(paths.indexPath);
+  if (paths) {
+    console.log(`[Server] FOUND dist at: ${paths.distPath}`);
+    app.use(express.static(paths.distPath));
   }
 
-  // Final Emergency Search
-  const emergencyPaths = getProductionPaths();
-  if (emergencyPaths) {
-    return res.sendFile(emergencyPaths.indexPath);
-  }
+  app.get("*", (req, res, next) => {
+    if (req.url.startsWith('/api/')) return next();
 
-  // If still not found, log directory structure to help debug
-  let dirCont: string[] = [];
-  let rootCont: string[] = [];
-  try { dirCont = fs.readdirSync(process.cwd()); } catch (e) { dirCont = ["Error reading CWD"]; }
-  try { rootCont = fs.readdirSync(path.resolve(process.cwd(), "..")); } catch (e) { rootCont = ["Error reading Root"]; }
+    if (paths && fs.existsSync(paths.indexPath)) {
+      return res.sendFile(paths.indexPath);
+    }
 
-  res.status(404).send(`
-    <html>
-      <body style="font-family: sans-serif; text-align: center; padding: 50px; background: #faf9f8; color: #333;">
-        <h1>Memory Vault: Build Link Missing</h1>
-        <p>The server is looking for the <b>dist</b> folder but can't find it in the current environment.</p>
+    // Emergency Diagnostics
+    const cwdFiles = fs.readdirSync(process.cwd());
+    const dirFiles = fs.readdirSync(__dirname);
 
-        <div style="text-align: left; background: #eee; padding: 20px; display: inline-block; border-radius: 8px; font-family: monospace; max-width: 80%; overflow-x: auto;">
-          <b>Current Folder:</b> ${process.cwd()}<br/>
-          <b>Files in this folder:</b><br/>
-          ${dirCont.map(f => `- ${f}`).join('<br/>')}
-          <br/><br/>
-          <b>Files in parent folder:</b><br/>
-          ${rootCont.map(f => `- ${f}`).join('<br/>')}
-        </div>
-        <hr/>
-        <p><b>Action Required:</b> Check your Render dashboard. Ensure your "Build Command" is <code>npm run build</code> and that it completed without errors.</p>
-      </body>
-    </html>
-  `);
-});
-
-if (!isVercel) {
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`EverGift server listening on port ${PORT}`);
+    res.status(404).send(`
+      <html>
+        <body style="font-family: sans-serif; text-align: center; padding: 40px; background: #faf9f8;">
+          <h1 style="color: #a3392f;">Vault Empty: Build Not Found</h1>
+          <p>The server is running, but the built frontend files are missing.</p>
+          <div style="text-align: left; background: #eee; padding: 20px; display: inline-block; border-radius: 8px; font-family: monospace; max-width: 90%;">
+            <b>Current Dir:</b> ${process.cwd()}<br/>
+            <b>Files:</b> ${cwdFiles.join(', ')}<br/><br/>
+            <b>Server Dir:</b> ${__dirname}<br/>
+            <b>Files:</b> ${dirFiles.join(', ')}
+          </div>
+          <hr/>
+          <p>Verify your <b>Build Command</b> is: <code>npm run build</code></p>
+        </body>
+      </html>
+    `);
   });
+
+  if (!isVercel) {
+    const PORT = Number(process.env.PORT) || 3000;
+    const server = app.listen(PORT, "0.0.0.0", () => {
+      console.log(`EverGift production server listening on port ${PORT}`);
+    }).on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        console.log(`[Server] Port ${PORT} busy, trying ${PORT + 1}...`);
+        server.listen(PORT + 1);
+      }
+    });
+  }
 }
 
 export default app;
