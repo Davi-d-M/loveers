@@ -1,31 +1,35 @@
-# Implementation Plan - Final "Bulletproof" Render Fix
+# Implementation Plan - Paystack Config & Webhook Stability
 
-This plan resolves the persistent "Frontend build not found" error on Render by implementing recursive path searching and comprehensive environment logging.
+This plan resolves the payment redirection issue by aligning the Paystack dashboard settings with your current live domain and adding a fallback webhook endpoint for reliability.
+
+## User Review Required
+
+> [!IMPORTANT]
+> **Action Required in Paystack Dashboard**:
+> You must manually update your Paystack settings as shown in your screenshot to match your new domain.
+> - **Live Callback URL**: `https://loveers-viyx.onrender.com/`
+> - **Live Webhook URL**: `https://loveers-viyx.onrender.com/api/paystack/webhook`
 
 ## Proposed Changes
 
-### [Server] "Smart" Path Discovery
-Update the server to actively look for the `dist` folder instead of relying on a single hardcoded path.
+### [Server] Add Webhook Support
+Add a dedicated endpoint to handle Paystack events asynchronously, ensuring no payment is ever missed even if the user closes their browser early.
 
 #### [MODIFY] [server.ts](file:///C:/Users/hp/AndroidStudioProjects/love/server.ts)
-- Implement a `findDistPath()` helper that checks:
-    - `./dist`
-    - `../dist`
-    - `./src/dist`
-    - `process.cwd()/dist`
-- Log the entire directory structure (one level deep) to the console if the build is still missing. This will give us the exact roadmap of the Render server.
-- Add an automatic redirect from `/` to the first available `index.html`.
+- Add `app.post("/api/paystack/webhook")` endpoint.
+- Implement basic signature verification (optional but recommended for production).
+- Log webhook events for easier debugging.
 
-### [Build] Build Step Verification
-Ensure the build process is producing files where the server expects them.
+### [UX] Dynamic Callback Handling
+Ensure the frontend handles the redirect from Paystack gracefully.
 
-#### [MODIFY] [package.json](file:///C:/Users/hp/AndroidStudioProjects/love/package.json)
-- Update build command: `vite build && echo "Build complete" && ls -R dist || dir /s dist` (standardizing output check).
-- Ensure `typescript` and `tsx` are firmly in `dependencies`.
+#### [MODIFY] [App.tsx](file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
+- Add logic to check for a `trxref` or `reference` in the URL on load (Paystack appends these after redirect).
+- Automatically trigger the "Success" screen if a valid reference is found.
 
 ## Verification Plan
 
 ### Manual Verification
-1. **Local Test**: Verify the server finds `dist` even if started from different subfolders.
-2. **Render Logs**: Check the new logs on Render to see the "Smart Discovery" in action.
-3. **Emergency Fallback**: If it still fails, the logs will show the exact directory tree, allowing for a 1-minute final fix.
+1. **Dashboard Check**: Confirm the URLs in Paystack match the ones listed above.
+2. **Payment Flow**: Complete a test payment and verify that you are redirected back to the correct "Sealed" screen on your new domain.
+3. **Webhook Log**: Check Render logs to see if the webhook event was received.

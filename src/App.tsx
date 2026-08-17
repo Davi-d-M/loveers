@@ -941,7 +941,7 @@ export default function App() {
     try {
       const handler = PaystackPop.setup({
         key: paystackKey,
-        email: "customer@evergift.io",
+        email: "care@alittleboxofgoodies.io",
         amount: 5000,
         currency: "KES",
         callback: (response: any) => {
@@ -1152,10 +1152,10 @@ export default function App() {
 
   async function handleShareLove() {
     const url = window.location.origin + "/";
-    const text = "Found the most heartfelt way to send digital gifts! 🎁✨ Check out EverGift:";
+    const text = "Found the most heartfelt way to send digital gifts! 🎁✨ Check out A Little Box of Goodies:";
     if (navigator.share) {
       try {
-        await navigator.share({ title: "EverGift", text, url });
+        await navigator.share({ title: "A Little Box of Goodies", text, url });
       } catch (e) {}
     } else {
       try {

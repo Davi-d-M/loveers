@@ -11,7 +11,7 @@ app.use(express.json({ limit: "10mb" }));
 
 // Health check
 app.get("/api/health", (_req, res) => {
-  res.json({ status: "ok", service: "EverGift API" });
+  res.json({ status: "ok", service: "A Little Box of Goodies API" });
 });
 
 // Paystack Transaction Verification Endpoint
@@ -87,7 +87,7 @@ if (!isProd && !isVercel) {
 
     const PORT = 3000;
     app.listen(PORT, "0.0.0.0", () => {
-      console.log(`EverGift dev server listening on http://localhost:${PORT}`);
+      console.log(`A Little Box of Goodies dev server listening on http://localhost:${PORT}`);
     });
   };
   setupDev();
@@ -132,7 +132,7 @@ if (!isProd && !isVercel) {
   if (!isVercel) {
     const PORT = Number(process.env.PORT) || 3000;
     const server = app.listen(PORT, "0.0.0.0", () => {
-      console.log(`EverGift production server listening on port ${PORT}`);
+      console.log(`A Little Box of Goodies production server listening on port ${PORT}`);
     }).on('error', (err: any) => {
       if (err.code === 'EADDRINUSE') {
         console.log(`[Server] Port ${PORT} busy, trying ${PORT + 1}...`);
