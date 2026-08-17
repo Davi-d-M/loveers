@@ -369,6 +369,9 @@ function AddItemModal({ type, onAdd, onClose }: any) {
   const [songTitle, setSongTitle] = useState("");
   const [songArtist, setSongArtist] = useState("");
   const [songLink, setSongLink] = useState("");
+  const [songDataUrl, setSongDataUrl] = useState("");
+  const [songBusy, setSongBusy] = useState(false);
+  const [songErr, setSongErr] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [videoDataUrl, setVideoDataUrl] = useState("");
   const [videoBusy, setVideoBusy] = useState(false);
@@ -424,10 +427,31 @@ function AddItemModal({ type, onAdd, onClose }: any) {
     reader.readAsDataURL(file);
   }
 
+  async function handleSongFile(e: any) {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (file.size > 10 * 1024 * 1024) {
+      setSongErr("Audio file is too large (max 10MB).");
+      return;
+    }
+    setSongBusy(true);
+    setSongErr("");
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setSongDataUrl(ev.target?.result as string);
+      setSongBusy(false);
+    };
+    reader.onerror = () => {
+      setSongErr("Failed to read audio file.");
+      setSongBusy(false);
+    };
+    reader.readAsDataURL(file);
+  }
+
   function canAdd() {
     if (type === "note") return noteText.trim().length > 0;
     if (type === "photo") return Boolean(photoDataUrl || photoUrl.trim());
-    if (type === "song") return songTitle.trim().length > 0;
+    if (type === "song") return songTitle.trim().length > 0 && (Boolean(songDataUrl || songLink.trim()));
     if (type === "video") return Boolean(videoDataUrl || videoUrl.trim());
     if (type === "gift") return giftName.trim().length > 0;
     if (type === "voice") return voiceText.trim().length > 0;
@@ -447,6 +471,7 @@ function AddItemModal({ type, onAdd, onClose }: any) {
       data.title = songTitle.trim();
       data.artist = songArtist.trim();
       data.link = songLink.trim();
+      data.src = songDataUrl;
     }
     if (type === "video") {
       if (videoDataUrl) {
@@ -560,6 +585,13 @@ function AddItemModal({ type, onAdd, onClose }: any) {
           <div className="stacked-form">
             <input className="text-input" placeholder="Song title" value={songTitle} onChange={(e) => setSongTitle(e.target.value)} autoFocus />
             <input className="text-input" placeholder="Artist (optional)" value={songArtist} onChange={(e) => setSongArtist(e.target.value)} />
+            <label className="file-drop">
+              {songBusy ? "Reading audio…" : songDataUrl ? "Choose a different song" : "Upload an MP3 from phone"}
+              <input type="file" accept="audio/*" onChange={handleSongFile} hidden />
+            </label>
+            {songDataUrl && <p className="mini-caption" style={{ color: 'var(--ok)' }}>✓ Audio loaded</p>}
+            {songErr && <p className="error-text">{songErr}</p>}
+            <p className="or-divider">or paste a link</p>
             <input className="text-input" placeholder="Link to listen (optional)" value={songLink} onChange={(e) => setSongLink(e.target.value)} />
           </div>
         )}
@@ -664,7 +696,49 @@ function AddItemModal({ type, onAdd, onClose }: any) {
   );
 }
 
-function TuckedItem({ item, index = 0 }: any) {
+function BoutiqueAudioPlayer({ src, title, artist, onPlay }: any) {
+  const [playing, setPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+    };
+  }, []);
+
+  function toggle() {
+    if (!audioRef.current) return;
+    if (playing) {
+      audioRef.current.pause();
+      setPlaying(false);
+    } else {
+      if (onPlay) onPlay();
+      audioRef.current.play();
+      setPlaying(true);
+    }
+  }
+
+  return (
+    <div className="boutique-player">
+      <audio ref={audioRef} src={src} onEnded={() => setPlaying(false)} />
+      <div className="vinyl-wrap">
+        <div className={`vinyl-small ${playing ? 'spinning' : ''}`} />
+      </div>
+      <div className="player-info">
+        <p className="player-title">{title || "Untitled"}</p>
+        <p className="player-artist">{artist || "Unknown Artist"}</p>
+        <button className="play-pill" onClick={toggle}>
+          {playing ? <Pause size={12} fill="currentColor" /> : <Play size={12} fill="currentColor" />}
+          {playing ? "Pause" : "Play"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function TuckedItem({ item, index = 0, onMediaPlay }: any) {
   const rot = (hashStr(item.id) % 7) - 3;
   const yOff = (hashStr(item.id + "y") % 13) - 6;
   const delay = Math.min(index, 8) * 70;
@@ -676,30 +750,24 @@ function TuckedItem({ item, index = 0 }: any) {
     body = <img className="tucked-photo" src={item.src} alt="Tucked keepsake" />;
   } else if (item.type === "song") {
     body = (
-      <div className="song-face">
-        <div className="vinyl" />
-        <div className="song-meta">
-          <p className="song-title">{item.title}</p>
-          {item.artist && <p className="song-artist">{item.artist}</p>}
-          {item.link && (
-            <a className="listen-link" href={item.link} target="_blank" rel="noreferrer">
-              <Play size={12} /> Listen
-            </a>
-          )}
-        </div>
-      </div>
+      <BoutiqueAudioPlayer
+        src={item.src || item.link}
+        title={item.title}
+        artist={item.artist}
+        onPlay={onMediaPlay}
+      />
     );
   } else if (item.type === "video") {
     if (item.src) {
       body = (
-        <div className="video-embed">
-          <video src={item.src} controls playsInline style={{ width: '100%', display: 'block' }} />
+        <div className="video-embed ethereal-frame">
+          <video src={item.src} controls playsInline style={{ width: '100%', display: 'block' }} onPlay={onMediaPlay} />
         </div>
       );
     } else {
       const ytId = getYouTubeId(item.url);
       body = ytId ? (
-        <div className="video-embed">
+        <div className="video-embed ethereal-frame">
           <iframe
             src={`https://www.youtube.com/embed/${ytId}`}
             title="Tucked video"
@@ -708,7 +776,7 @@ function TuckedItem({ item, index = 0 }: any) {
           />
         </div>
       ) : (
-        <a className="watch-link" href={item.url} target="_blank" rel="noreferrer">
+        <a className="watch-link" href={item.url} target="_blank" rel="noreferrer" onClick={onMediaPlay}>
           <VideoIcon size={16} /> Watch clip
         </a>
       );
@@ -735,16 +803,22 @@ function TuckedItem({ item, index = 0 }: any) {
         </span>
         {item.text && <p className="handwritten-note">“{item.text}”</p>}
         {item.audioSrc && (
-          <audio src={item.audioSrc} controls style={{ height: 32, width: '100%', marginTop: 8 }} />
+          <BoutiqueAudioPlayer
+            src={item.audioSrc || item.link}
+            title="Voice Note"
+            artist="Recorded with care"
+            onPlay={onMediaPlay}
+          />
         )}
-        {item.link && (
-          <a className="listen-link" href={item.link} target="_blank" rel="noreferrer">
+        {item.link && !item.audioSrc && (
+          <a className="listen-link" href={item.link} target="_blank" rel="noreferrer" onClick={onMediaPlay}>
             <Play size={12} /> Play recording
           </a>
         )}
       </div>
     );
-  } else if (item.type === "drawing") {
+  }
+else if (item.type === "drawing") {
     body = (
       <>
         <img className="tucked-photo" src={item.src} alt="A hand drawing" />
@@ -1166,6 +1240,13 @@ export default function App() {
     }
   }
 
+  function handleMediaPlay() {
+    if (audioRef.current && isAudioPlaying) {
+      audioRef.current.pause();
+      setIsAudioPlaying(false);
+    }
+  }
+
   const currentTheme = (THEMES as any)[openedPackage?.theme || 'default'] || THEMES.default;
 
   return (
@@ -1350,6 +1431,19 @@ export default function App() {
         .news-body { font-size: 12.5px; color: var(--ink-soft); line-height: 1.45; margin: 0; }
         .view-footer { text-align: center; margin-top: 4px; }
         .view-footer .thin-rule { max-width: 280px; margin: 0 auto; }
+        .boutique-player { display: flex; gap: 14px; align-items: center; padding: 12px; background: rgba(0,0,0,0.03); border-radius: 10px; border: 1px solid rgba(0,0,0,0.08); width: 100%; }
+        .vinyl-wrap { width: 44px; height: 44px; position: relative; flex-shrink: 0; }
+        .vinyl-small { width: 100%; height: 100%; border-radius: 50%; background: repeating-radial-gradient(circle, #1c1c1c 0, #1c1c1c 2px, #333 3px, #333 4px); border: 2px solid #111; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .vinyl-small::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 10px; height: 10px; background: var(--paper-soft); border-radius: 50%; border: 1px solid #111; }
+        .spinning { animation: spin 4s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .player-info { flex: 1; min-width: 0; text-align: left; }
+        .player-title { font-weight: 700; font-size: 13px; margin: 0; color: var(--ink); }
+        .player-artist { font-size: 11px; color: var(--ink-soft); margin: 1px 0 6px; text-transform: uppercase; letter-spacing: 0.04em; }
+        .play-pill { display: inline-flex; align-items: center; gap: 5px; background: var(--ink); color: var(--paper); border: none; border-radius: 20px; padding: 4px 10px; font-size: 10px; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        .video-embed.ethereal-frame { border-radius: 8px; overflow: hidden; box-shadow: 0 10px 25px -10px rgba(0,0,0,0.5), 0 0 1px 1px rgba(255,255,255,0.2) inset; border: 1px solid rgba(0,0,0,0.1); }
+        @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+        .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
         @keyframes pulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(163,57,47,0.4); } 70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(163,57,47,0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(163,57,47,0); } }
         @media (prefers-reduced-motion: reduce) { .btn-primary, .btn-stamp, .item-icon-wrap, .box-lid, .box-tape, .box-glow, .confetti-dot, .tucked-card, .vinyl { transition: none !important; animation: none !important; } }
       `}</style>
@@ -1600,12 +1694,12 @@ export default function App() {
                   <p className="to-line">{openedPackage.to}</p>
                   <p className="from-line">from {openedPackage.from}{openedPackage.sealedAt ? ` · ${new Date(openedPackage.sealedAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}` : ""}</p>
                 </div>
-                <div className="tucked-grid">{openedPackage.items.map((it: any, idx: number) => <TuckedItem key={it.id} item={it} index={idx} />)}</div>
+                <div className="tucked-grid">{openedPackage.items.map((it: any, idx: number) => <TuckedItem key={it.id} item={it} index={idx} onMediaPlay={handleMediaPlay} />)}</div>
               </>
             ) : (
               <div className="constellation-view" style={{ width: '100%', minHeight: '80vh', background: '#020617', borderRadius: 20, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ position: 'absolute', inset: 0, overflow: 'hidden' }}>{[...Array(50)].map((_, i) => <div key={i} className="animate-pulse-slow" style={{ position: 'absolute', left: `${Math.random() * 100}%`, top: `${Math.random() * 100}%`, width: 2, height: 2, background: '#fff', boxShadow: '0 0 5px #fff', borderRadius: '50%', animationDelay: `${Math.random() * 4}s` } as any} />)}</div>
-                <div style={{ position: 'relative', zIndex: 10, width: '100%', display: 'flex', flexWrap: 'wrap', gap: 40, justifyContent: 'center', padding: 40 }}>{openedPackage.items.map((it: any, idx: number) => <div key={it.id} className="animate-gentle-bob" style={{ animationDelay: `${idx * 0.4}s`, transform: `translateZ(${(idx % 3) * 20}px)`, cursor: 'pointer' } as any}><TuckedItem item={it} index={idx} /></div>)}</div>
+                <div style={{ position: 'relative', zIndex: 10, width: '100%', display: 'flex', flexWrap: 'wrap', gap: 40, justifyContent: 'center', padding: 40 }}>{openedPackage.items.map((it: any, idx: number) => <div key={it.id} className="animate-gentle-bob" style={{ animationDelay: `${idx * 0.4}s`, transform: `translateZ(${(idx % 3) * 20}px)`, cursor: 'pointer' } as any}><TuckedItem item={it} index={idx} onMediaPlay={handleMediaPlay} /></div>)}</div>
               </div>
             )}
             <div className="view-footer">

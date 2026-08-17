@@ -1,35 +1,29 @@
-# Implementation Plan - Paystack Config & Webhook Stability
+# Implementation Plan - Exceptional Media Experience
 
-This plan resolves the payment redirection issue by aligning the Paystack dashboard settings with your current live domain and adding a fallback webhook endpoint for reliability.
-
-## User Review Required
-
-> [!IMPORTANT]
-> **Action Required in Paystack Dashboard**:
-> You must manually update your Paystack settings as shown in your screenshot to match your new domain.
-> - **Live Callback URL**: `https://loveers-viyx.onrender.com/`
-> - **Live Webhook URL**: `https://loveers-viyx.onrender.com/api/paystack/webhook`
+This plan focuses on making the music, voice, and video features "wonderful" by adding file uploads for songs and creating a custom, themed media player for the recipient.
 
 ## Proposed Changes
 
-### [Server] Add Webhook Support
-Add a dedicated endpoint to handle Paystack events asynchronously, ensuring no payment is ever missed even if the user closes their browser early.
-
-#### [MODIFY] [server.ts](file:///C:/Users/hp/AndroidStudioProjects/love/server.ts)
-- Add `app.post("/api/paystack/webhook")` endpoint.
-- Implement basic signature verification (optional but recommended for production).
-- Log webhook events for easier debugging.
-
-### [UX] Dynamic Callback Handling
-Ensure the frontend handles the redirect from Paystack gracefully.
+### [UX] High-End Media Players
+Replace standard browser controls with boutique, "scrapbook-style" players.
 
 #### [MODIFY] [App.tsx](file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
-- Add logic to check for a `trxref` or `reference` in the URL on load (Paystack appends these after redirect).
-- Automatically trigger the "Success" screen if a valid reference is found.
+- **Song Upload**: Add a file picker for audio files in the "Add Song" modal.
+- **Custom Player Component**: Create a `BoutiqueAudioPlayer` component that uses Lucide icons and matches the app's aesthetic.
+- **Media Toggling**: Ensure background music pauses automatically when a user plays a tucked song or voice note.
+- **Video Aesthetics**: Add a subtle "Polaroid vignette" and rounded corners to all video embeds.
+
+### [Logic] Audio Quality & Handling
+Ensure the audio is clear and handles large files gracefully.
+
+#### [MODIFY] [App.tsx](file:///C:/Users/hp/AndroidStudioProjects/love/src/App.tsx)
+- **Audio Compression**: Implement a basic check for file size (max 10MB) for uploads.
+- **Voice Note Polish**: Improve the "Recording" feedback with a smoother pulsing animation.
 
 ## Verification Plan
 
 ### Manual Verification
-1. **Dashboard Check**: Confirm the URLs in Paystack match the ones listed above.
-2. **Payment Flow**: Complete a test payment and verify that you are redirected back to the correct "Sealed" screen on your new domain.
-3. **Webhook Log**: Check Render logs to see if the webhook event was received.
+1. **Song Upload Test**: Upload an mp3 and verify it plays within the scrapbook.
+2. **Video Look Test**: Check if YouTube and uploaded videos have the new "Ethereal" styling.
+3. **Audio Conflict Test**: Play a voice note while background music is on. Background music should pause.
+4. **Wonderful Experience Check**: Verify that all media interactions feel smooth, premium, and meaningful.

@@ -1,7 +1,11 @@
-- [ ] **Bulletproof Render Fix**
-    - [ ] Implement `findDistPath()` helper in `server.ts`
-    - [ ] Add directory tree logging in `server.ts`
-    - [ ] Update `package.json` build command for clarity
-- [ ] **Verification & Deployment**
-    - [ ] Run local build test
+- [ ] **Boutique Media Experience**
+    - [ ] Create `BoutiqueAudioPlayer` component in `App.tsx`
+    - [ ] Update `AddItemModal` with song upload support
+    - [ ] Implement audio file size checks (10MB limit)
+    - [ ] Integrate auto-pausing logic for background music
+    - [ ] Apply "Ethereal" video styling in `TuckedItem`
+    - [ ] Improve voice recording animation
+- [ ] **Verification**
+    - [ ] Test song upload and playback
+    - [ ] Verify background music auto-pausing
     - [ ] Push to GitHub
